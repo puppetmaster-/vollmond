@@ -1,0 +1,19 @@
+[package]
+name = "vollmond"
+version = "0.1.0"
+authors = ["puppetmaster"]
+edition = "2018"
+
+[dependencies]
+quad-snd = { git = "https://github.com/not-fl3/quad-snd" }
+
+[dependencies.macroquad]
+path = "../macroquad"
+#version = "0.3.0-alpha.11"
+
+[dependencies.nanoserde]
+path = "../nanoserde"
+# version = "0.1.20"
+
+[profile.dev.package.'*']
+opt-level = 3
