@@ -2,12 +2,12 @@ use macroquad::prelude::*;
 use crate::tilemap::Tilemap;
 use crate::utils::clamp;
 use macroquad::texture::Texture2D;
-use crate::{PIXEL_ZOOM, DEBUG};
+use crate::{MAP_ZOOM, DEBUG};
 
 const SPAWN_ID: u32 = 507;
-const DISTANCE: f32 = PIXEL_ZOOM;
+const DISTANCE: f32 = MAP_ZOOM;
 const BLOCKING_IDS: [u32;1] = [520];
-const MOVING_SPEED: f32 = 24.0;
+const MOVING_SPEED: f32 = 25.0;
 
 pub struct Player{
     pub position: Vec2,
@@ -25,7 +25,7 @@ impl Player {
         }
     }
     pub fn update_map(&mut self, tilemap: &Tilemap){
-        let id_center = tilemap.get_id_at(tilemap.get_layer_id("map"), self.position.x()+4.0, self.position.y()+4.0);
+        let id_center = tilemap.get_id_at(tilemap.get_layer_id("map"), self.position.x(), self.position.y());
         if id_center.is_some(){
             self.collide_color = GOLD;
         }else{

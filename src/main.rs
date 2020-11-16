@@ -12,10 +12,11 @@ use crate::scene::title::Title;
 use crate::scene::game::Game;
 use macroquad::prelude::*;
 
-
-const PIXEL_ZOOM: f32 = 6.0;
-const BACKGROUND_COLOR: Color = Color([27, 27, 25, 255]);
-const DEBUG: bool = true;
+const MAP_ZOOM: f32 = 6.0;
+const TITLE_ZOOM: f32 = 4.0;
+const BACKGROUND_COLOR: Color = Color([27, 25, 25, 255]);
+const FONT_COLOR: Color = Color([197, 228, 243, 255]);
+const DEBUG: bool = false;
 
 #[derive(Debug)]
 pub enum MainState{
@@ -28,17 +29,17 @@ pub enum MainState{
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut main_state = MainState::TITLE;
-
-    let texture: Texture2D = load_texture("assets/deep-night_adv.png").await;
+    let image = Image::from_file_with_format(include_bytes!("../assets/deep-night_adv.png"), Some(image::PNG));
+    let texture: Texture2D = load_texture_from_image(&image);
     set_texture_filter(texture,FilterMode::Nearest);
 
     let mut title = Title::init().await;
     let mut game = Game::init().await;
 
-    let mut fps_buffer = vec![];
+    //let mut fps_buffer = vec![];
     loop {
         clear_background(BACKGROUND_COLOR);
-        show_fancy_fps(&mut fps_buffer);
+        //show_fancy_fps(&mut fps_buffer);
         match main_state {
             MainState::EXIT => break,
             MainState::TITLE => if let Some(gs) = title.run(texture) { main_state = gs },

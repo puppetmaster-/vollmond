@@ -5,6 +5,7 @@ authors = ["puppetmaster"]
 edition = "2018"
 
 [dependencies]
+image = "0.22.5"
 quad-snd = { git = "https://github.com/not-fl3/quad-snd" }
 
 [dependencies.macroquad]
@@ -14,6 +15,12 @@ path = "../macroquad"
 [dependencies.nanoserde]
 path = "../nanoserde"
 # version = "0.1.20"
+
+[dependencies.keyframe]
+version = "1.0.3"
+
+[dependencies.keyframe_derive]
+version = "1.0.0"
 
 [profile.dev.package.'*']
 opt-level = 3

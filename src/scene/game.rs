@@ -1,5 +1,5 @@
 use macroquad::prelude::*;
-use crate::{PIXEL_ZOOM, MainState};
+use crate::{MAP_ZOOM, MainState};
 use crate::tilemap::Tilemap;
 use crate::entity::player::Player;
 use std::future::Future;
@@ -23,12 +23,14 @@ impl Game{
         async move {
 
             let camera = Camera2D {
-                zoom: vec2(PIXEL_ZOOM / screen_width() * 2.0, -PIXEL_ZOOM / screen_height() * 2.0),
+                zoom: vec2(MAP_ZOOM / screen_width() * 2.0, -MAP_ZOOM / screen_height() * 2.0),
                 target: vec2(0.0, 0.0),
                 ..Default::default()
             };
-            let tiles_json_vec = load_file("assets/deep-night_adv.json").await.ok().unwrap();
-            let tilemap = Tilemap::from_pyxeledit(Rect::new(0.0, 0.0, 104.0, 336.0), String::from_utf8(tiles_json_vec).unwrap().as_str()).await;
+            //let tiles_json_vec = load_file("assets/deep-night_adv.json").await.ok().unwrap();
+            let tiles_json_vec = include_bytes!("../../assets/deep-night_adv.json").to_vec();
+            let mut tilemap = Tilemap::from_pyxeledit(Rect::new(0.0, 0.0, 104.0, 336.0), String::from_utf8(tiles_json_vec).unwrap().as_str()).await;
+            tilemap.visibility(tilemap.get_layer_id("logic"), false);
             let player = Player::new(&tilemap);
 
             Game {
@@ -62,7 +64,7 @@ impl Game{
 
 fn update_map_camera(game: &mut Game, new_target: Vec2){
     game.camera.target = new_target;
-    game.camera.zoom =  vec2(PIXEL_ZOOM / screen_width()* 2.0,-PIXEL_ZOOM / screen_height()* 2.0);
+    game.camera.zoom =  vec2(MAP_ZOOM / screen_width()* 2.0, -MAP_ZOOM / screen_height()* 2.0);
 }
 
 fn process_action() -> Option<MainState>{
