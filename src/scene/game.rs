@@ -4,6 +4,7 @@ use crate::tilemap::Tilemap;
 use crate::entity::player::Player;
 use std::future::Future;
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum GameState{
     HOUSE1,

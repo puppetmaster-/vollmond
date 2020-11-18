@@ -4,7 +4,7 @@ use std::future::Future;
 use crate::{MainState, TITLE_ZOOM, FONT_COLOR};
 use crate::utils::tween::Tween;
 use keyframe::Keyframe;
-use keyframe::functions::{EaseInOutQuint, EaseInOut, Linear, EaseOut, EaseIn};
+use keyframe::functions::{EaseInOut, Linear, EaseOut, EaseIn};
 
 pub struct Title{
     background: Texture2D,

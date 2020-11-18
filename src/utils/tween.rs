@@ -12,6 +12,7 @@ pub struct Tween {
     repeat: bool,
 }
 
+#[allow(dead_code)]
 impl Tween{
     pub fn from_keyframes(keyframes: Vec<Keyframe<f32>>,start_at: u64, duration_sec: u64, repeat: bool) -> Tween{
         let sequence = AnimationSequence::from(keyframes);

@@ -16,7 +16,7 @@ const MAP_ZOOM: f32 = 6.0;
 const TITLE_ZOOM: f32 = 4.0;
 const BACKGROUND_COLOR: Color = Color([27, 25, 25, 255]);
 const FONT_COLOR: Color = Color([197, 228, 243, 255]);
-const DEBUG: bool = false;
+const DEBUG: bool = true;
 
 #[derive(Debug)]
 pub enum MainState{
@@ -61,6 +61,7 @@ fn window_conf() -> Conf {
     }
 }
 
+#[allow(dead_code)]
 fn show_fancy_fps(fps_buffer: &mut Vec<f32>){
 
     let time = get_frame_time() * 5000.0;

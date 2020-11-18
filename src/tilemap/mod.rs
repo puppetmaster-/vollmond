@@ -141,39 +141,32 @@ impl Tilemap{
     }
 
     pub fn get_id_at_position(&self, layer: usize, position: Vec2) -> Option<u32>{
-        let x = position.x() as i32 / self.tile_width;
-        let y = position.y() as i32 / self.tile_height;
-        self.get_id_at(layer, x as f32, y as f32)
+        let mut pos_x = position.x() as i32;
+        let mut pos_y = position.y() as i32;
+        if pos_x % 8 != 0 {
+            pos_x -= pos_x % 8;
+        }
+        if pos_y % 8 != 0 {
+            pos_y -= pos_y % 8;
+        }
+        let x = pos_x as i32 / self.tile_width;
+        let y = pos_y as i32 / self.tile_height;
+        self.get_id_at(layer, x as usize, y as usize)
     }
 
-    pub fn get_id_at(&self, layer_nr: usize, mut in_x: f32, mut in_y: f32) -> Option<u32>{
-        let mut x = in_x as usize;
-        let mut y = in_y as usize;
-        let x_rest = x % self.tile_width as usize;
-        let y_rest = y % self.tile_height as usize;
-        if x_rest != 0 && x_rest > (self.tile_width / 2) as usize {
-            x += self.tile_width as usize - x_rest;
-        }else{
-            x -= x_rest;
-        }
-        if y_rest != 0 && y_rest > (self.tile_height / 2) as usize {
-            y += self.tile_height as usize - y_rest;
-        }else{
-            y -= y_rest;
-        }
+    pub fn get_id_at(&self, layer_nr: usize, x: usize, y: usize) -> Option<u32>{
         match self.layers.get(layer_nr) {
             None => {
-                //debug!("no layer!");
                 None
             },
             Some(layer) => {
                 match layer.tiles.get(x,y){
                     None => {
-                        debug!("layer[{}] {}, no tile at {},{}!",layer_nr, layer.name, x,y);
+                        //debug!("layer[{}] {}, no tile at {},{}!",layer_nr, layer.name, x,y);
                         None
                     },
                     Some(tile) => {
-                        debug!("layer[{}] {}, tile {} at {},{}!",layer_nr, layer.name, tile.id, x,y);
+                        //debug!("layer[{}] {}, tile {} at {},{}!",layer_nr, layer.name, tile.id, x,y);
                         Some(tile.id)
                     }
                 }
@@ -239,7 +232,8 @@ impl Tilemap{
                                 pivot: None
                             });
                             if DEBUG {
-                                draw_rectangle_lines(tmp_pos.x(), tmp_pos.y(), 8.0, 8.0, 1.0, GREEN);
+                                draw_rectangle_lines(tmp_pos.x(), tmp_pos.y(), 8.0, 8.0, 0.1, GREEN);
+                                draw_circle(tmp_pos.x(), tmp_pos.y(),0.5, RED);
                             }
                         }
                     }
@@ -310,7 +304,7 @@ fn transform_pyxeltilemap(clip: Rect, pyxeltilemap: PyxelTilemap) ->Tilemap{
 }
 
 fn transform_pyxellayer(pyxellayers: &[pyxeledit::Layers], width: usize, height: usize) ->Vec<Layer>{
-    let mut layers: Vec<Layer> = Vec::new();
+    let mut layers: Vec<Layer> = Vec::with_capacity(pyxellayers.len());
     for pyxellayer in pyxellayers.iter().rev(){
         let l = Layer{
             tiles: transform_pyxeltile(&pyxellayer.tiles, width, height),
@@ -336,6 +330,7 @@ fn transform_pyxeltile(pyxeltiles: &[pyxeledit::Tile], width: usize, height: usi
         };
         vecgrid.set(tile, t.x as usize, t.y as usize);
     };
+    debug!("{:?}",vecgrid);
     vecgrid
 }
 /*

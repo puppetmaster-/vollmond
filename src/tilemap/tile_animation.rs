@@ -1,6 +1,6 @@
 use crate::tilemap::Tilemap;
 use std::time::Duration;
-use macroquad::prelude::{get_frame_time, Texture2D, draw_texture_ex, DrawTextureParams, WHITE, Rect};
+use macroquad::prelude::{get_frame_time, Rect};
 
 pub struct TileAnimation{
     frames: Vec<Rect>,
@@ -11,6 +11,7 @@ pub struct TileAnimation{
     repeating: bool,
 }
 
+#[allow(dead_code)]
 impl TileAnimation {
     pub fn new(tilemap: &Tilemap, tile_ids: &[u32], mut tile_durations: Vec<Duration>) -> Self{
         if tile_ids.len() != tile_durations.len(){
