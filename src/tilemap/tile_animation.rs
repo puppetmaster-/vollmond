@@ -2,13 +2,14 @@ use crate::tilemap::Tilemap;
 use std::time::Duration;
 use macroquad::prelude::{get_frame_time, Rect};
 
+#[derive(Debug, Clone)]
 pub struct TileAnimation{
     frames: Vec<Rect>,
     frame_length: Duration,
     tile_durations: Vec<Duration>,
     current_frame: usize,
     timer: Duration,
-    repeating: bool,
+    pub repeating: bool,
 }
 
 #[allow(dead_code)]
@@ -65,36 +66,18 @@ impl TileAnimation {
         self.timer = Duration::from_secs(0);
     }
 
+    pub fn finish(&mut self) -> bool{
+        if !self.repeating{
+            return self.current_frame == self.frames.len()-1 || self.current_frame == 0 || self.current_frame == (self.frames.len()-1)/2;
+        }
+        false
+    }
+
+    pub fn reset(&mut self){
+        self.current_frame = 0;
+    }
+
     pub fn source(&self) -> Option<Rect>{
         Some(self.frames[self.current_frame])
     }
-
-    /*
-    pub fn draw<P>(&mut self, texture: Texture2D, params: P){
-        where
-        P: Into<DrawTextureParams>,
-        {
-            let mut params = params.into();
-            params.source = Some(self.frames[self.current_frame]);
-            draw_texture_ex(texture, self.position.x() , self.position.y(), WHITE,DrawTextureParams {
-                source: Some(self.frames[self.current_frame]),
-                ..Default::default()
-            });
-        }
-        let mut params = params.into();
-        draw_texture_ex(texture, self.position.x() , self.position.y(), WHITE,DrawTextureParams {
-            source: self.source,
-            ..Default::default()
-        });
-    }
-
-    pub fn draw<P>(&mut self, ctx: &mut Context, texture: &Texture, params: P)
-        where
-            P: Into<DrawParams>,
-    {
-        let mut params = params.into();
-        params.clip = Some(self.frames[self.current_frame]);
-        graphics::draw(ctx, texture, params)
-    }
-     */
 }

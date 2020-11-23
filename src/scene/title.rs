@@ -35,10 +35,10 @@ impl Title{
                 target: vec2(0.0, 0.0),
                 ..Default::default()
             };
-            let image = Image::from_file_with_format(include_bytes!("../../assets/title.png"), Some(image::PNG));
+            let image = Image::from_file_with_format(include_bytes!("../../assets/title.png"), None);
             let background: Texture2D = load_texture_from_image(&image);
             set_texture_filter(background,FilterMode::Nearest);
-            let image2 = Image::from_file_with_format(include_bytes!("../../assets/vollmond.png"), Some(image::PNG));
+            let image2 = Image::from_file_with_format(include_bytes!("../../assets/vollmond.png"), None);
             let title: Texture2D = load_texture_from_image(&image2);
             set_texture_filter(title,FilterMode::Nearest);
             let font = load_ttf_font_from_bytes(include_bytes!("../../assets/fonts/GothicPixels.ttf"));
@@ -82,7 +82,7 @@ fn process_action() -> Option<MainState>{
         if is_key_pressed(KeyCode::Q) | is_key_pressed(KeyCode::Escape) {
             return Some(MainState::EXIT);
         } else {
-            return Some(MainState::GAME);
+            return Some(MainState::STORY);
         }
     }
     None

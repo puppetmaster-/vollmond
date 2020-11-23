@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
 
-mod timer;
+pub(crate) mod timer;
 pub(crate) mod vecgrid;
 pub(crate) mod tween;
 

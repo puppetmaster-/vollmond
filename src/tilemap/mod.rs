@@ -1,5 +1,5 @@
 mod pyxeledit;
-mod tile_animation;
+pub(crate) mod tile_animation;
 
 use std::collections::HashMap;
 use crate::tilemap::pyxeledit::PyxelTilemap;
@@ -22,7 +22,7 @@ impl Tilemap{
         }
     }
 
-    pub async fn from_pyxeledit(clip: Rect, data: &str) -> Tilemap{
+    pub fn from_pyxeledit(clip: Rect, data: &str) -> Tilemap{
         let pyxeltilemap = PyxelTilemap::new(data);
         transform_pyxeltilemap(clip, pyxeltilemap)
     }
@@ -162,11 +162,9 @@ impl Tilemap{
             Some(layer) => {
                 match layer.tiles.get(x,y){
                     None => {
-                        //debug!("layer[{}] {}, no tile at {},{}!",layer_nr, layer.name, x,y);
                         None
                     },
                     Some(tile) => {
-                        //debug!("layer[{}] {}, tile {} at {},{}!",layer_nr, layer.name, tile.id, x,y);
                         Some(tile.id)
                     }
                 }
@@ -330,7 +328,6 @@ fn transform_pyxeltile(pyxeltiles: &[pyxeledit::Tile], width: usize, height: usi
         };
         vecgrid.set(tile, t.x as usize, t.y as usize);
     };
-    debug!("{:?}",vecgrid);
     vecgrid
 }
 /*
