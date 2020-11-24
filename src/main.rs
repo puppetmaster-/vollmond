@@ -3,6 +3,7 @@
 // run www server with basic-http-server -x
 
 mod assets;
+#[macro_use]
 mod utils;
 mod tilemap;
 mod scene;
@@ -16,9 +17,9 @@ use crate::scene::story::Story;
 const MAP_ZOOM: f32 = 6.0;
 const TITLE_ZOOM: f32 = 4.0;
 const SIDE_ZOOM: f32 = 4.0;
-const BACKGROUND_COLOR: Color = Color([27, 25, 25, 255]);
-const FONT_COLOR: Color = Color([197, 228, 243, 255]);
-const DEBUG: bool = true;
+const BACKGROUND_COLOR: Color = color_u8!(27, 25, 25, 255);
+const FONT_COLOR: Color = color_u8!(197, 228, 243, 255);
+const DEBUG: bool = false;
 
 #[derive(Debug)]
 pub enum MainState{
@@ -83,4 +84,3 @@ fn show_fancy_fps(fps_buffer: &mut Vec<f32>){
         fps_buffer.resize(100.0 as usize, 0.0);
     }
 }
-

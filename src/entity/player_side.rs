@@ -11,22 +11,29 @@ use crate::utils::timer::Timer;
 const SPAWN_ID: u32 = 507;
 const EXIT: u32 = 510;
 
-const JUMP_SPEED_UP: f32 = 60.0;
-const JUMP_SPEED_DOWN: f32 = 80.0;
-const JUMP_TIMER_MAX: u32 = 20;
+const JUMP_UP_FACTOR: f32 = 2.5;
+const JUMP_DOWN_FACTOR: f32 = 2.0;
+const JUMP_UP_CURVE: [f32;12] = [8.0, 15.0, 13.0, 8.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 1.0, 1.0];
+const JUMP_DOWN_CURVE: [f32;6] = [0.0, 1.0, 1.0, 2.0, 3.0, 5.0];
 
-const MOVING_SPEED: f32 = 60.0;
-const MOVING_TIMER_MAX: usize = 6;
-const MOVE_SPEED_CURVE: [f32;7] = [1.0, 2.0, 3.0, 5.0, 8.0, 13.0, 21.0];
-const BREAK_SPEED_CURVE: [f32;3] = [13.0, 5.0, 1.0];
+const AIR_TIMER_MAX: usize = 5;
+
+const MOVE_FACTOR: f32 = 4.0;
+const MOVE_SPEED_CURVE: [f32;8] = [1.0, 1.0, 2.0, 3.0, 5.0, 8.0, 13.0, 21.0];
+const BREAK_SPEED_CURVE: [f32;8] = [21.0, 13.0, 8.0, 5.0, 3.0, 2.0, 1.0, 1.0];
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum State{
     FLOOR,
-    JUMP,
-    AIR,
     IDLE,
     RUN,
+}
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+enum JumpState{
+    NOT,
+    JUMP,
+    AIR,
+    DOWN,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -41,6 +48,9 @@ pub struct PlayerSide {
     moving_speed: f32,
     moving_timer: usize,
     break_timer: usize,
+    air_timer: usize,
+    jump_up_timer: usize,
+    jump_down_timer: usize,
     direction: Vec2,
     pub position: Vec2,
     collide_color: Color,
@@ -49,6 +59,7 @@ pub struct PlayerSide {
     need_reset: bool,
     jump_timer: u32,
     state: State,
+    jump_state: JumpState,
     animation_state: AnimationState,
     animations: HashMap<AnimationState, TileAnimation>,
     start_timer: Timer,
@@ -64,6 +75,9 @@ impl PlayerSide {
             moving_speed: 0.0,
             moving_timer: 0,
             break_timer: 0,
+            air_timer: 0,
+            jump_up_timer: 0,
+            jump_down_timer: 0,
             direction: Vec2::zero(),
             position: start_position,
             collide_color: SKYBLUE,
@@ -72,6 +86,7 @@ impl PlayerSide {
             need_reset: true,
             jump_timer: 0,
             state: State::FLOOR,
+            jump_state: JumpState::NOT,
             animation_state: AnimationState::STANDRIGHT,
             animations,
             start_timer: Timer::new(500),
@@ -83,7 +98,7 @@ impl PlayerSide {
             self.state = State::IDLE;
             self.jump_timer = 0;
             self.moving_timer = 0;
-            self.break_timer = 3;
+            self.break_timer = 0;
             self.position = self.start_position;
             self.need_reset = false;
             self.start_timer.restart();
@@ -102,6 +117,7 @@ impl PlayerSide {
             let delta = get_frame_time();
             let mut new_x = self.position.x();
             let mut new_y = self.position.y();
+
             if is_key_down(KeyCode::A) || is_key_down(KeyCode::Left) {
                 let distance = 4.0 * MOVE_SPEED_CURVE[self.moving_timer] * delta;
                 if can_walk_left(vec2(self.position.x() - distance, self.position.y()), tilemap) {
@@ -113,15 +129,15 @@ impl PlayerSide {
                     self.state = State::RUN;
                     self.direction = vec2(-1.0,0.0);
                     new_x = self.position.x() - distance;
-                    if self.moving_timer < MOVING_TIMER_MAX{
+                    if self.moving_timer < MOVE_SPEED_CURVE.len()-1{
                         self.moving_timer +=1;
                     }
-                    self.break_timer = 3;
+                    self.break_timer = 0;
                 } else {
                     self.collide_color = GOLD;
                 }
             } else if is_key_down(KeyCode::D) || is_key_down(KeyCode::Right) {
-                let distance = 4.0 * MOVE_SPEED_CURVE[self.moving_timer] * delta;
+                let distance = MOVE_FACTOR * MOVE_SPEED_CURVE[self.moving_timer] * delta;
                 if can_walk_right(vec2(self.position.x() + distance, self.position.y()), tilemap) {
                     if self.animation_state != AnimationState::RUNRIGHT{
                         self.animations.get_mut(&self.animation_state).unwrap().reset();
@@ -131,18 +147,21 @@ impl PlayerSide {
                     self.state = State::RUN;
                     self.direction = vec2(1.0,0.0);
                     new_x = self.position.x() + distance;
-                    if self.moving_timer < MOVING_TIMER_MAX{
+                    if self.moving_timer < MOVE_SPEED_CURVE.len()-1{
                         self.moving_timer +=1;
                     }
-                    self.break_timer = 3;
+                    self.break_timer = 0;
                 } else {
                     self.collide_color = GOLD;
                 }
             } else {
                 self.moving_timer = 0;
-                if self.break_timer > 0{
-                    self.break_timer -=1;
-                    new_x = self.position.x() + self.direction.x() * 4.0 * BREAK_SPEED_CURVE[self.break_timer] * delta;
+                if self.break_timer < BREAK_SPEED_CURVE.len()-1 {
+                    println!("break {}",self.break_timer);
+                    //TODO fix slide into wall
+                    new_x = self.position.x() + self.direction.x() * (MOVE_FACTOR + 2.0) * BREAK_SPEED_CURVE[self.break_timer] * delta;
+                    self.break_timer +=1;
+                    println!("new_x: {}",new_x);
                 }
                 match self.animation_state {
                     AnimationState::RUNLEFT => {
@@ -163,40 +182,57 @@ impl PlayerSide {
                 }
             };
             // jump
-            if is_key_down(KeyCode::Space) && self.state != State::AIR{
-                if self.jump_timer < JUMP_TIMER_MAX {
-                    println!("jump");
-                    self.state = State::JUMP;
-                    self.jump_timer += 1;
-                    new_y = self.position.y() - JUMP_SPEED_UP * delta;
+            if is_key_down(KeyCode::Space) && (self.jump_state == JumpState::JUMP || self.jump_state == JumpState::NOT)  {
+                println!("jump up = {}",self.jump_up_timer);
+                if self.jump_up_timer < JUMP_UP_CURVE.len()-1 {
+                    self.jump_state = JumpState::JUMP;
+                    self.jump_up_timer += 1;
+                    new_y = self.position.y() - JUMP_UP_FACTOR + JUMP_UP_CURVE[self.jump_up_timer] * delta;
+                    new_x = new_x + self.direction.x() * 0.2;
                 }else{
-                    self.state = State::AIR;
+                    self.jump_state = JumpState::AIR;
                 }
             }
-            if !is_key_down(KeyCode::Space) && self.state == State::JUMP {
-                println!("jump finish");
-                self.state = State::AIR;
-                self.jump_timer = 0;
+
+            //stop jumping
+            if !is_key_down(KeyCode::Space) && self.jump_state == JumpState::JUMP {
+                self.jump_state = JumpState::AIR;
+                self.jump_up_timer = 0;
             }
-            if self.state == State::AIR || self.state == State::FLOOR || self.state == State::RUN {
-                if can_walk_down(vec2(self.position.x(), self.position.y()), tilemap) {
-                    println!("in air");
-                    new_y = self.position.y() + JUMP_SPEED_DOWN * delta;
-                    self.state = State::AIR;
+
+            if self.jump_state == JumpState::AIR{
+                if self.air_timer < AIR_TIMER_MAX{
+                    self.air_timer +=1;
                 }else{
-                    println!("air finish, floor now");
-                    self.jump_timer = 0;
+                    self.air_timer = 0;
+                    self.jump_state = JumpState::DOWN;
+                }
+            }
+
+            if self.jump_state == JumpState::DOWN || self.jump_state == JumpState::NOT {
+                if can_walk_down(vec2(self.position.x(), self.position.y()), tilemap) {
+                    if self.jump_down_timer < JUMP_DOWN_CURVE.len()-1 {
+                        self.jump_down_timer += 1;
+                    }
+                    new_y = self.position.y() + JUMP_DOWN_FACTOR + JUMP_DOWN_CURVE[self.jump_down_timer]* delta;
+                    new_x = new_x + self.direction.x()  * 0.2;
+                    self.jump_state = JumpState::DOWN;
+                }else{
+                    self.jump_down_timer = 0;
+                    self.jump_up_timer = 0;
+                    self.jump_state =JumpState::NOT;
                     self.state = State::FLOOR;
                 }
             }
 
-            if self.position.x() == new_x && self.position.y() == new_y{
-                println!("{}",self.position.y() % 8.0);
+            if self.position.x() == new_x && self.position.y() == new_y {
                 if self.position.y() % 8.0 > 0.0{
                     self.position = vec2(self.position.x(),self.position.y()-self.position.y() % 8.0);
                 }
-                //self.position = self.position.round()
+                self.direction = vec2(0.0,0.0);
+                self.position.set_x(new_x);
             }else{
+                println!("set new_x");
                 self.position.set_x(new_x);
                 self.position.set_y(new_y);
             }
@@ -237,7 +273,6 @@ impl PlayerSide {
 fn can_walk_left(new_position: Vec2, tilemap: &Tilemap) -> bool{
     let id = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position+vec2(0.0,0.0));
     let id2 = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position+vec2(0.0,8.0));
-    draw_circle((new_position+vec2(0.0,8.0)).x(),(new_position+vec2(0.0,8.0)).y(),0.5, GREEN);
     match id{
         Some(i) => {
             if i == 520 {
@@ -259,9 +294,7 @@ fn can_walk_left(new_position: Vec2, tilemap: &Tilemap) -> bool{
 
 fn can_walk_right(new_position: Vec2, tilemap: &Tilemap) -> bool{
     let id = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position+vec2(8.0,0.0));
-    draw_circle((new_position+vec2(8.0,0.0)).x(),(new_position+vec2(8.0,0.0)).y(),0.5, GREEN);
     let id2 = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position+vec2(8.0,8.0));
-    draw_circle((new_position+vec2(8.0,8.0)).x(),(new_position+vec2(8.0,8.0)).y(),0.5, GREEN);
     match id{
         Some(i) => {
             if i == 520 {
@@ -305,9 +338,7 @@ fn can_walk_up(new_position: Vec2, tilemap: &Tilemap) -> bool{
 
 fn can_walk_down(new_position: Vec2, tilemap: &Tilemap) -> bool{
     let id = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position+vec2(0.0,16.0));
-    draw_circle((new_position+vec2(0.0,16.0)).x(),(new_position+vec2(8.0,8.0)).y(),0.5, GREEN);
     let id2 = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position+vec2(8.0,16.0));
-    draw_circle((new_position+vec2(8.0,16.0)).x(),(new_position+vec2(8.0,8.0)).y(),0.5, GREEN);
     match id{
         Some(i) => {
             if i == 520 {
