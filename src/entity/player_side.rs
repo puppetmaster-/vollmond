@@ -8,7 +8,7 @@ use crate::tilemap::tile_animation::TileAnimation;
 use std::collections::HashMap;
 use crate::utils::timer::Timer;
 
-const SPAWN_ID: u32 = 507;
+pub const SPAWN_ID: u32 = 507;
 const EXIT: u32 = 510;
 
 const JUMP_UP_FACTOR: f32 = 2.5;
@@ -45,6 +45,7 @@ enum AnimationState{
 }
 
 pub struct PlayerSide {
+    pub ingredients: u8,
     moving_speed: f32,
     moving_timer: usize,
     break_timer: usize,
@@ -66,12 +67,11 @@ pub struct PlayerSide {
 }
 
 impl PlayerSide {
-    pub fn new(tilemap: &Tilemap) -> Self {
-        let mut start_position= tilemap.get_all_position_from_id(tilemap.get_layer_id("logic"),SPAWN_ID)[0];
-        start_position.set_y(start_position.y());
+    pub fn new() -> Self {
         let spritesheet= get_player_spritesheet();
         let animations = get_animations();
         Self {
+            ingredients: 0,
             moving_speed: 0.0,
             moving_timer: 0,
             break_timer: 0,
@@ -79,10 +79,10 @@ impl PlayerSide {
             jump_up_timer: 0,
             jump_down_timer: 0,
             direction: Vec2::zero(),
-            position: start_position,
+            position: Vec2::zero(),
             collide_color: SKYBLUE,
             spritesheet,
-            start_position,
+            start_position: Vec2::zero(),
             need_reset: true,
             jump_timer: 0,
             state: State::FLOOR,
@@ -103,7 +103,7 @@ impl PlayerSide {
             self.need_reset = false;
             self.start_timer.restart();
             self.animation_state = AnimationState::STANDRIGHT;
-            for (s, a) in self.animations.iter_mut() {
+            for (_, a) in self.animations.iter_mut() {
                 a.reset();
             }
         }
@@ -252,7 +252,7 @@ impl PlayerSide {
         self.position.round()
     }
 
-    pub fn draw(&self, texture: Texture2D){
+    pub fn draw(&self){
         draw_texture_ex(self.spritesheet, self.position().x()-2.0, self.position().y(), WHITE,DrawTextureParams {
             source: self.animations.get(&self.animation_state).unwrap().source(),
             ..Default::default()
@@ -369,7 +369,7 @@ fn get_animations() -> HashMap<AnimationState,TileAnimation>{
 }
 
 fn get_player_spritesheet() -> Texture2D{
-    let image = Image::from_file_with_format(include_bytes!("../../assets/player.png"), None);
+    let image = Image::from_file_with_format(include_bytes!("../../assets/images/player.png"), None);
     let spritesheet: Texture2D = load_texture_from_image(&image);
     set_texture_filter(spritesheet,FilterMode::Nearest);
     spritesheet

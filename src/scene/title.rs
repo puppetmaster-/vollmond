@@ -22,8 +22,8 @@ impl Title{
                 Keyframe::new(8.0,0.5,EaseOut),
                 Keyframe::new(0.0,1.0,EaseInOut)], 0,3,true);
             let tween2 = Tween::from_keyframes(vec![
-                Keyframe::new(0.0,0.0,EaseIn),
-                Keyframe::new(4.0,0.5,EaseIn),
+                Keyframe::new(0.0,0.0,EaseOut),
+                Keyframe::new(4.0,0.5,EaseOut),
                 Keyframe::new(0.0,1.0,EaseIn)],0,2,true);
             let tween3 = Tween::from_keyframes(vec![
                 Keyframe::new(0.0,0.0,Linear),
@@ -35,10 +35,10 @@ impl Title{
                 target: vec2(0.0, 0.0),
                 ..Default::default()
             };
-            let image = Image::from_file_with_format(include_bytes!("../../assets/title.png"), None);
+            let image = Image::from_file_with_format(include_bytes!("../../assets/images/title.png"), None);
             let background: Texture2D = load_texture_from_image(&image);
             set_texture_filter(background,FilterMode::Nearest);
-            let image2 = Image::from_file_with_format(include_bytes!("../../assets/vollmond.png"), None);
+            let image2 = Image::from_file_with_format(include_bytes!("../../assets/images/vollmond.png"), None);
             let title: Texture2D = load_texture_from_image(&image2);
             set_texture_filter(title,FilterMode::Nearest);
             let font = load_ttf_font_from_bytes(include_bytes!("../../assets/fonts/GothicPixels.ttf"));
@@ -52,7 +52,7 @@ impl Title{
         }
     }
 
-    pub fn run(&mut self, _texture: Texture2D) -> Option<MainState>{
+    pub fn run(&mut self) -> Option<MainState>{
         self.animations[0].update();
         self.animations[1].update();
         self.animations[2].update();
@@ -71,9 +71,9 @@ impl Title{
     }
 }
 
-fn update_camera(game: &mut Title, new_target: Vec2){
-    game.camera.target = new_target;
-    game.camera.zoom =  vec2(TITLE_ZOOM / screen_width()* 2.0, -TITLE_ZOOM / screen_height()* 2.0);
+fn update_camera(scene: &mut Title, new_target: Vec2){
+    scene.camera.target = new_target;
+    scene.camera.zoom =  vec2(TITLE_ZOOM / screen_width()* 2.0, -TITLE_ZOOM / screen_height()* 2.0);
 }
 
 fn process_action() -> Option<MainState>{

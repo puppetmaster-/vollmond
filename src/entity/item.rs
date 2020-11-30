@@ -2,7 +2,7 @@ use crate::tilemap::tile_animation::TileAnimation;
 use macroquad::prelude::{Vec2, draw_texture_ex, WHITE, DrawTextureParams, Texture2D, draw_circle, draw_rectangle_lines, GREEN, RED, Rect};
 use crate::utils::tween::Tween;
 use keyframe::Keyframe;
-use keyframe::functions::{EaseInOut, Linear, EaseOut, EaseIn};
+use keyframe::functions::{EaseInOut, EaseOut};
 use crate::tilemap::Tilemap;
 use std::time::Duration;
 use crate::DEBUG;

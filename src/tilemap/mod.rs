@@ -280,7 +280,7 @@ fn get_tile_rectangles(clip: Rect, tile_width: i32, tile_height: i32) ->HashMap<
     let mut tile_rectangles: HashMap<u32, Rect> = HashMap::with_capacity((x * y) as usize);
     for i in 0..x{
         for j in 0..y{
-            let rec = Rect::new(clip.x +(j*tile_width) as f32,clip.y +(i*tile_height) as f32, tile_width as f32, tile_height as f32); //switch x and y axis
+            let rec = Rect::new(clip.x +(j*tile_width) as f32,clip.y +(i*tile_height) as f32, tile_width as f32, tile_height as f32);
             tile_rectangles.insert(id,rec);
             id +=1;
         }
