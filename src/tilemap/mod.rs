@@ -76,10 +76,11 @@ impl Tilemap{
 
     pub fn replace_all_tileid(&mut self, layer: usize, old_id: u32, new_id: Option<u32>){
         if let Some(layer) = self.layers.get_mut(layer) {
-            for x in 0..self.height {
-                for y in 0..self.width {
+            for x in 0..self.width {
+                for y in 0..self.height {
                     if let Some(tile) = layer.tiles.get_mut(x, y) {
                         if tile.id == old_id {
+                            println!("found");
                             if let Some(id) = new_id {
                                 tile.id = id;
                             } else {

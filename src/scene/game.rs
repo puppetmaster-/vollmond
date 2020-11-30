@@ -4,18 +4,32 @@ use crate::tilemap::Tilemap;
 use crate::entity::player_map::PlayerMap;
 use std::future::Future;
 use crate::entity::player_side::{PlayerSide, SPAWN_ID};
+use std::collections::HashMap;
 
 const OFFSET_CAMERA: f32 = 15.0;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum GameState{
-    HOUSE1,
     MAP,
+    MAP_HOUSE,
+    HOUSE,
+    MAP_CEMETERY,
     CEMETERY,
-    CEMETERY2,
+    MAP_ICE,
     ICE,
-    ICE2,
+    MAP_FOREST,
+    FOREST,
+    MAP_SWAMP,
+    SWAMP,
+    MAP_SAND,
+    SAND,
+    MAP_ZELDA1,
+    ZELDA1,
+    MAP_ZELDA2,
+    ZELDA2,
+    MAP_ZELDA3,
+    ZELDA3,
 }
 
 pub struct Game {
@@ -24,9 +38,8 @@ pub struct Game {
     player_map: PlayerMap,
     player_side: PlayerSide,
     map_tilemap: Tilemap,
-    cemetery_tilemap: Tilemap,
-    cemetery2_tilemap: Tilemap,
-    ice_tilemap: Tilemap,
+    tilemaps: HashMap<GameState,Tilemap>,
+    current_tilemap_key: GameState,
     camera_map: Camera2D,
     camera_side: Camera2D,
     camera_sky: Camera2D,
@@ -41,9 +54,15 @@ impl Game{
             let side_texture = get_side_texture();
             let map_tilemap = get_map_tilemap();
             let player_map = PlayerMap::new(&map_tilemap);
-            let cemetery_tilemap = get_side_tilemap(include_bytes!("../../assets/maps/side1.json").to_vec());
-            let cemetery2_tilemap = get_side_tilemap(include_bytes!("../../assets/maps/side1.json").to_vec());
-            let ice_tilemap = get_side_tilemap(include_bytes!("../../assets/maps/side1.json").to_vec());
+            let mut tilemaps = HashMap::new();
+            tilemaps.insert(GameState::CEMETERY,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
+            tilemaps.insert(GameState::FOREST,get_side_tilemap(include_bytes!("../../assets/maps/green2.json").to_vec()));
+            tilemaps.insert(GameState::ICE,get_side_tilemap(include_bytes!("../../assets/maps/ice.json").to_vec()));
+            tilemaps.insert(GameState::SAND,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
+            tilemaps.insert(GameState::SWAMP,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
+            tilemaps.insert(GameState::ZELDA1,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
+            tilemaps.insert(GameState::ZELDA2,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
+            tilemaps.insert(GameState::ZELDA3,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
             let player_side = PlayerSide::new();
 
             let camera_map = Camera2D {
@@ -69,14 +88,13 @@ impl Game{
                 player_map,
                 player_side,
                 map_tilemap,
-                cemetery_tilemap,
-                cemetery2_tilemap,
-                ice_tilemap,
+                tilemaps,
+                current_tilemap_key: GameState::MAP_CEMETERY,
                 camera_map,
                 camera_side,
                 camera_sky,
                 game_state: GameState::MAP,
-                init_sidemap: true
+                init_sidemap: true,
             }
         }
     }
@@ -85,13 +103,11 @@ impl Game{
         match self.game_state {
             GameState::MAP => {
                 if let Some(gs) = self.player_map.update(&self.map_tilemap){
-                    if gs == GameState::HOUSE1 {
+                    if gs == GameState::HOUSE {
                         if self.player_side.ingredients == 4 {
                             self.game_state = gs;
                         }
-                        self.init_sidemap = true;
-                    } else{
-                        self.init_sidemap = true;
+                    }else{
                         self.game_state = gs;
                     }
                 }
@@ -104,34 +120,103 @@ impl Game{
                 set_default_camera();
                 process_action()
             },
-            GameState::HOUSE1 => {
+            GameState::MAP_HOUSE => {
+                self.game_state = GameState::HOUSE;
+                None
+            },
+            GameState::HOUSE => {
                 Some(MainState::END)
             },
-            GameState::CEMETERY => {
-                println!("{}",self.init_sidemap);
-                if let Some(gs) = self.player_side.update(&self.cemetery_tilemap){
+            GameState::MAP_CEMETERY => {
+                self.current_tilemap_key = GameState::CEMETERY;
+                self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
+                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
+                self.game_state = self.current_tilemap_key.clone();
+                None
+            },
+            GameState::MAP_ICE => {
+                self.current_tilemap_key = GameState::ICE;
+                self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
+                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
+                self.game_state = self.current_tilemap_key.clone();
+                None
+            },
+            GameState::MAP_SWAMP => {
+                self.current_tilemap_key = GameState::SWAMP;
+                self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
+                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
+                self.game_state = self.current_tilemap_key.clone();
+                None
+            },
+            GameState::MAP_SAND => {
+                self.current_tilemap_key = GameState::SAND;
+                self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
+                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
+                self.game_state = self.current_tilemap_key.clone();
+                None
+            },
+            GameState::MAP_FOREST=> {
+                self.current_tilemap_key = GameState::FOREST;
+                self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
+                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
+                self.game_state = self.current_tilemap_key.clone();
+                None
+            },
+            GameState::MAP_ZELDA1=> {
+                self.current_tilemap_key = GameState::ZELDA1;
+                self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
+                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
+                self.game_state = self.current_tilemap_key.clone();
+                None
+            },
+            GameState::MAP_ZELDA2=> {
+                self.current_tilemap_key = GameState::ZELDA2;
+                self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
+                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
+                self.game_state = self.current_tilemap_key.clone();
+                None
+            },
+            GameState::MAP_ZELDA3=> {
+                self.current_tilemap_key = GameState::ZELDA3;
+                self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
+                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
+                self.game_state = self.current_tilemap_key.clone();
+                None
+            },
+            _ => {
+                if let Some(gs) = self.player_side.update(self.tilemaps.get_mut(&self.current_tilemap_key).unwrap()){
                     self.game_state = gs;
-                    self.init_sidemap = true;
-                }
-                if self.init_sidemap {
-                    self.player_side.position = self.cemetery_tilemap.get_all_position_from_id(self.cemetery_tilemap.get_layer_id("logic"),SPAWN_ID)[0];
-                    self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
-                    self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
-                    self.init_sidemap = false;
                 }
                 update_sky_camera(self);
                 set_camera(self.camera_sky);
-                self.cemetery_tilemap.draw(self.side_texture, vec2(0.0, 0.0), Some(self.cemetery_tilemap.get_layer_id("sky")));
+                self.tilemaps.get(&self.current_tilemap_key).unwrap().draw(self.side_texture, vec2(0.0, 0.0), Some(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("sky")));
                 set_default_camera();
                 update_side_camera(self, self.player_side.position());
                 set_camera(self.camera_side);
-                self.cemetery_tilemap.draw(self.side_texture, vec2(0.0, 0.0), Some(self.cemetery_tilemap.get_layer_id("background")));
-                self.cemetery_tilemap.draw(self.side_texture, vec2(0.0, 0.0), Some(self.cemetery_tilemap.get_layer_id("map")));
+                self.tilemaps.get(&self.current_tilemap_key).unwrap().draw(self.side_texture, vec2(0.0, 0.0), Some(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("background")));
+                self.tilemaps.get(&self.current_tilemap_key).unwrap().draw(self.side_texture, vec2(0.0, 0.0), Some(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("map")));
+                //draw Items
+                for id in 474..479{
+                    let item_pos= self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),id);
+                    if item_pos.len() > 0{
+                        draw_texture_ex(self.side_texture,item_pos[0].x(),item_pos[0].y(),WHITE,DrawTextureParams{
+                            source: Some(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_clip_from_id(id)),
+                            ..Default::default()
+                        });
+                    }
+                }
                 self.player_side.draw();
                 set_default_camera();
                 None
             }
-            _ => None
         }
 
     }

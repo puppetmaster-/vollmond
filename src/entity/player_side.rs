@@ -10,6 +10,11 @@ use crate::utils::timer::Timer;
 
 pub const SPAWN_ID: u32 = 507;
 const EXIT: u32 = 510;
+const ITEM_STONE: u32 = 474;
+const ITEM_HAIR: u32 = 476;
+const ITEM_FRUIT: u32 = 477;
+const ITEM_FLOWER: u32 = 475;
+const ITEM_ZELDA: u32 = 478;
 
 const JUMP_UP_FACTOR: f32 = 2.5;
 const JUMP_DOWN_FACTOR: f32 = 2.0;
@@ -46,6 +51,7 @@ enum AnimationState{
 
 pub struct PlayerSide {
     pub ingredients: u8,
+    pub bonus: u8,
     moving_speed: f32,
     moving_timer: usize,
     break_timer: usize,
@@ -64,6 +70,7 @@ pub struct PlayerSide {
     animation_state: AnimationState,
     animations: HashMap<AnimationState, TileAnimation>,
     start_timer: Timer,
+    last_item_id: Option<u32>,
 }
 
 impl PlayerSide {
@@ -72,6 +79,7 @@ impl PlayerSide {
         let animations = get_animations();
         Self {
             ingredients: 0,
+            bonus: 0,
             moving_speed: 0.0,
             moving_timer: 0,
             break_timer: 0,
@@ -90,16 +98,16 @@ impl PlayerSide {
             animation_state: AnimationState::STANDRIGHT,
             animations,
             start_timer: Timer::new(500),
+            last_item_id: None
         }
     }
-    pub fn update(&mut self, tilemap: &Tilemap) -> Option<GameState>{
+    pub fn update(&mut self, tilemap: &mut Tilemap) -> Option<GameState>{
 
         if self.need_reset{
             self.state = State::IDLE;
             self.jump_timer = 0;
             self.moving_timer = 0;
             self.break_timer = 0;
-            self.position = self.start_position;
             self.need_reset = false;
             self.start_timer.restart();
             self.animation_state = AnimationState::STANDRIGHT;
@@ -157,11 +165,8 @@ impl PlayerSide {
             } else {
                 self.moving_timer = 0;
                 if self.break_timer < BREAK_SPEED_CURVE.len()-1 {
-                    println!("break {}",self.break_timer);
-                    //TODO fix slide into wall
                     new_x = self.position.x() + self.direction.x() * (MOVE_FACTOR + 2.0) * BREAK_SPEED_CURVE[self.break_timer] * delta;
                     self.break_timer +=1;
-                    println!("new_x: {}",new_x);
                 }
                 match self.animation_state {
                     AnimationState::RUNLEFT => {
@@ -183,7 +188,6 @@ impl PlayerSide {
             };
             // jump
             if is_key_down(KeyCode::Space) && (self.jump_state == JumpState::JUMP || self.jump_state == JumpState::NOT)  {
-                println!("jump up = {}",self.jump_up_timer);
                 if self.jump_up_timer < JUMP_UP_CURVE.len()-1 {
                     self.jump_state = JumpState::JUMP;
                     self.jump_up_timer += 1;
@@ -232,16 +236,35 @@ impl PlayerSide {
                 self.direction = vec2(0.0,0.0);
                 self.position.set_x(new_x);
             }else{
-                println!("set new_x");
                 self.position.set_x(new_x);
                 self.position.set_y(new_y);
             }
 
-            if id_center == Some(EXIT) {
-                self.need_reset = true;
-                Some(GameState::MAP)
-            } else {
-                None
+            match id_center{
+                Some(id) => {
+                    println!("{}",id);
+                    match id{
+                        SPAWN_ID => None,
+                        EXIT => { self.need_reset = true; Some(GameState::MAP)},
+                        ITEM_ZELDA => {
+                            if self.last_item_id != Some(id) {
+                                self.last_item_id = Some(id);
+                                self.bonus +=1;
+                                tilemap.replace_all_tileid(tilemap.get_layer_id("logic"),ITEM_ZELDA,None);
+                            }
+                            None
+                        },
+                        _ => {
+                            if self.last_item_id != Some(id) {
+                                self.last_item_id = Some(id);
+                                self.ingredients +=1;
+                                tilemap.replace_all_tileid(tilemap.get_layer_id("logic"),id,None);
+                            }
+                            None
+                        }
+                    }
+                }
+                _ => None
             }
         }else{
             None
