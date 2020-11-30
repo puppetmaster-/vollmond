@@ -61,13 +61,8 @@ impl End{
         }
 
         if get_last_key_pressed().is_some() {
-            #[cfg(not(target_arch = "wasm32"))]
-            if is_key_pressed(KeyCode::Q) | is_key_pressed(KeyCode::Escape) {
+            if self.timer.finished(){
                 return Some(MainState::EXIT);
-            } else {
-                if self.timer.finished(){
-                    return Some(MainState::EXIT);
-                }
             }
         }
         None

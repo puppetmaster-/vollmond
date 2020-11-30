@@ -76,17 +76,12 @@ impl Story{
         }
 
         if get_last_key_pressed().is_some() {
-            #[cfg(not(target_arch = "wasm32"))]
-            if is_key_pressed(KeyCode::Q) | is_key_pressed(KeyCode::Escape) {
-                return Some(MainState::EXIT);
-            } else {
-                if self.timer.finished(){
-                    if self.show_text1{
-                        self.show_text1 = false;
-                        self.timer.restart();
-                    }else{
-                        return Some(MainState::GAME);
-                    }
+            if self.timer.finished(){
+                if self.show_text1{
+                    self.show_text1 = false;
+                    self.timer.restart();
+                }else{
+                    return Some(MainState::GAME);
                 }
             }
         }

@@ -180,8 +180,5 @@ fn get_side_tilemap(json_vec: Vec<u8>) -> Tilemap {
 }
 
 fn process_action() -> Option<MainState>{
-    if is_key_pressed(KeyCode::Q) | is_key_pressed(KeyCode::Escape) {
-        return Some(MainState::TITLE);
-    }
     None
 }

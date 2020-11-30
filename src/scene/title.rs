@@ -78,8 +78,8 @@ fn update_camera(scene: &mut Title, new_target: Vec2){
 
 fn process_action() -> Option<MainState>{
     if get_last_key_pressed().is_some() {
-        #[cfg(not(target_arch = "wasm32"))]
         if is_key_pressed(KeyCode::Q) | is_key_pressed(KeyCode::Escape) {
+            #[cfg(not(target_arch = "wasm32"))]
             return Some(MainState::EXIT);
         } else {
             return Some(MainState::STORY);

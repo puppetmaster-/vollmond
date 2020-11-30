@@ -43,8 +43,7 @@ async fn main() {
 
     let mut fps_buffer = vec![];
     loop {
-        //clear_background(BACKGROUND_COLOR);
-        clear_background(RED);
+        clear_background(BACKGROUND_COLOR);
         if DEBUG{
             show_fancy_fps(&mut fps_buffer);
         }
