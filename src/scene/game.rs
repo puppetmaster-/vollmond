@@ -5,6 +5,9 @@ use crate::entity::player_map::PlayerMap;
 use std::future::Future;
 use crate::entity::player_side::{PlayerSide, SPAWN_ID};
 use std::collections::HashMap;
+use keyframe::Keyframe;
+use keyframe::functions::{EaseInOut, Linear, EaseOut, EaseIn};
+use crate::utils::tween::Tween;
 
 const OFFSET_CAMERA: f32 = 15.0;
 
@@ -45,23 +48,28 @@ pub struct Game {
     camera_sky: Camera2D,
     game_state: GameState,
     init_sidemap: bool,
+    item_tween: Tween,
 }
 
 impl Game{
     pub fn init() -> impl Future<Output = Game> {
         async move {
+            let tween = Tween::from_keyframes(vec![
+                Keyframe::new(0.0,0.0,EaseOut),
+                Keyframe::new(4.0,0.5,EaseOut),
+                Keyframe::new(0.0,1.0,EaseIn)],0,2,true);
             let map_texture = get_map_texture();
             let side_texture = get_side_texture();
             let map_tilemap = get_map_tilemap();
             let player_map = PlayerMap::new(&map_tilemap);
             let mut tilemaps = HashMap::new();
-            tilemaps.insert(GameState::CEMETERY,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
+            tilemaps.insert(GameState::CEMETERY,get_side_tilemap(include_bytes!("../../assets/maps/cemetery.json").to_vec()));
             tilemaps.insert(GameState::FOREST,get_side_tilemap(include_bytes!("../../assets/maps/green2.json").to_vec()));
             tilemaps.insert(GameState::ICE,get_side_tilemap(include_bytes!("../../assets/maps/ice.json").to_vec()));
             tilemaps.insert(GameState::SAND,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
-            tilemaps.insert(GameState::SWAMP,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
-            tilemaps.insert(GameState::ZELDA1,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
-            tilemaps.insert(GameState::ZELDA2,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
+            tilemaps.insert(GameState::SWAMP,get_side_tilemap(include_bytes!("../../assets/maps/swamp.json").to_vec()));
+            tilemaps.insert(GameState::ZELDA1,get_side_tilemap(include_bytes!("../../assets/maps/zelda.json").to_vec()));
+            tilemaps.insert(GameState::ZELDA2,get_side_tilemap(include_bytes!("../../assets/maps/zelda.json").to_vec()));
             tilemaps.insert(GameState::ZELDA3,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
             let player_side = PlayerSide::new();
 
@@ -95,11 +103,13 @@ impl Game{
                 camera_sky,
                 game_state: GameState::MAP,
                 init_sidemap: true,
+                item_tween: tween,
             }
         }
     }
 
     pub fn run(&mut self) -> Option<MainState>{
+        self.item_tween.update();
         match self.game_state {
             GameState::MAP => {
                 if let Some(gs) = self.player_map.update(&self.map_tilemap){
@@ -130,7 +140,7 @@ impl Game{
             GameState::MAP_CEMETERY => {
                 self.current_tilemap_key = GameState::CEMETERY;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
-                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 None
@@ -138,7 +148,7 @@ impl Game{
             GameState::MAP_ICE => {
                 self.current_tilemap_key = GameState::ICE;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
-                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 None
@@ -146,7 +156,7 @@ impl Game{
             GameState::MAP_SWAMP => {
                 self.current_tilemap_key = GameState::SWAMP;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
-                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 None
@@ -154,7 +164,7 @@ impl Game{
             GameState::MAP_SAND => {
                 self.current_tilemap_key = GameState::SAND;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
-                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 None
@@ -162,7 +172,7 @@ impl Game{
             GameState::MAP_FOREST=> {
                 self.current_tilemap_key = GameState::FOREST;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
-                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 None
@@ -170,7 +180,7 @@ impl Game{
             GameState::MAP_ZELDA1=> {
                 self.current_tilemap_key = GameState::ZELDA1;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
-                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 None
@@ -178,7 +188,7 @@ impl Game{
             GameState::MAP_ZELDA2=> {
                 self.current_tilemap_key = GameState::ZELDA2;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
-                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 None
@@ -186,7 +196,7 @@ impl Game{
             GameState::MAP_ZELDA3=> {
                 self.current_tilemap_key = GameState::ZELDA3;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
-                self.camera_side.target = self.player_side.position()-vec2(0.0,OFFSET_CAMERA);
+                self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 None
@@ -207,13 +217,14 @@ impl Game{
                 for id in 474..479{
                     let item_pos= self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),id);
                     if item_pos.len() > 0{
-                        draw_texture_ex(self.side_texture,item_pos[0].x(),item_pos[0].y(),WHITE,DrawTextureParams{
+                        draw_texture_ex(self.side_texture,item_pos[0].x(),(item_pos[0].y() + self.item_tween.value()).round(),WHITE,DrawTextureParams{
                             source: Some(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_clip_from_id(id)),
                             ..Default::default()
                         });
                     }
                 }
                 self.player_side.draw();
+                self.tilemaps.get(&self.current_tilemap_key).unwrap().draw(self.side_texture, vec2(0.0, 0.0), Some(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("front")));
                 set_default_camera();
                 None
             }

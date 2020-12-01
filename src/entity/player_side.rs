@@ -110,6 +110,7 @@ impl PlayerSide {
             self.break_timer = 0;
             self.need_reset = false;
             self.start_timer.restart();
+            self.last_item_id = None;
             self.animation_state = AnimationState::STANDRIGHT;
             for (_, a) in self.animations.iter_mut() {
                 a.reset();
@@ -187,7 +188,7 @@ impl PlayerSide {
                 }
             };
             // jump
-            if is_key_down(KeyCode::Space) && (self.jump_state == JumpState::JUMP || self.jump_state == JumpState::NOT)  {
+            if (is_key_down(KeyCode::Space ) || is_key_down(KeyCode::Up )) && (self.jump_state == JumpState::JUMP || self.jump_state == JumpState::NOT)  {
                 if self.jump_up_timer < JUMP_UP_CURVE.len()-1 {
                     self.jump_state = JumpState::JUMP;
                     self.jump_up_timer += 1;
@@ -199,7 +200,7 @@ impl PlayerSide {
             }
 
             //stop jumping
-            if !is_key_down(KeyCode::Space) && self.jump_state == JumpState::JUMP {
+            if (!is_key_down(KeyCode::Space) && !is_key_down(KeyCode::Up)) && self.jump_state == JumpState::JUMP {
                 self.jump_state = JumpState::AIR;
                 self.jump_up_timer = 0;
             }

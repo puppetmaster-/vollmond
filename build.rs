@@ -1,3 +1,4 @@
+
 extern crate winres;
 extern crate image;
 
@@ -5,8 +6,10 @@ use image::imageops;
 use std::path::Path;
 
 
+
 // https://github.com/mxre/winres
 fn main() {
+
     if cfg!(target_os = "windows") {
         if !Path::new("assets/icon.ico").exists() {
             if Path::new("assets/icon.png").exists() {
@@ -20,4 +23,6 @@ fn main() {
         res.set_icon("assets/icon.ico");
         res.compile().unwrap();
     }
+
 }
+
