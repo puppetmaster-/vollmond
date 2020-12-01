@@ -51,8 +51,13 @@ async fn main() {
             MainState::EXIT => break,
             MainState::TITLE => if let Some(gs) = title.run() { main_state = gs },
             MainState::GAME => if let Some(gs) = game.run() { main_state = gs },
-            MainState::STORY => if let Some(gs) = story.run() { main_state = gs },
-            MainState::END => if let Some(gs) = end.run() { main_state = gs },
+            MainState::STORY => if let Some(gs) = story.run() {
+                main_state = gs;
+                if game.player_side.ingredients > 0{
+                    game.reset()
+                }
+            },
+            MainState::END => if let Some(gs) = end.run(game.player_side.bonus) { main_state = gs },
             _ => {}
         }
         next_frame().await

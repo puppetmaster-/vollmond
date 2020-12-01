@@ -39,7 +39,7 @@ pub struct Game {
     map_texture: Texture2D,
     side_texture: Texture2D,
     player_map: PlayerMap,
-    player_side: PlayerSide,
+    pub player_side: PlayerSide,
     map_tilemap: Tilemap,
     tilemaps: HashMap<GameState,Tilemap>,
     current_tilemap_key: GameState,
@@ -62,15 +62,7 @@ impl Game{
             let side_texture = get_side_texture();
             let map_tilemap = get_map_tilemap();
             let player_map = PlayerMap::new(&map_tilemap);
-            let mut tilemaps = HashMap::new();
-            tilemaps.insert(GameState::CEMETERY,get_side_tilemap(include_bytes!("../../assets/maps/cemetery.json").to_vec()));
-            tilemaps.insert(GameState::FOREST,get_side_tilemap(include_bytes!("../../assets/maps/green2.json").to_vec()));
-            tilemaps.insert(GameState::ICE,get_side_tilemap(include_bytes!("../../assets/maps/ice.json").to_vec()));
-            tilemaps.insert(GameState::SAND,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
-            tilemaps.insert(GameState::SWAMP,get_side_tilemap(include_bytes!("../../assets/maps/swamp.json").to_vec()));
-            tilemaps.insert(GameState::ZELDA1,get_side_tilemap(include_bytes!("../../assets/maps/zelda.json").to_vec()));
-            tilemaps.insert(GameState::ZELDA2,get_side_tilemap(include_bytes!("../../assets/maps/zelda.json").to_vec()));
-            tilemaps.insert(GameState::ZELDA3,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec()));
+
             let player_side = PlayerSide::new();
 
             let camera_map = Camera2D {
@@ -96,7 +88,7 @@ impl Game{
                 player_map,
                 player_side,
                 map_tilemap,
-                tilemaps,
+                tilemaps: get_tilemaps(),
                 current_tilemap_key: GameState::MAP_CEMETERY,
                 camera_map,
                 camera_side,
@@ -106,6 +98,14 @@ impl Game{
                 item_tween: tween,
             }
         }
+    }
+
+    pub fn reset(&mut self){
+        self.tilemaps = get_tilemaps();
+        self.player_side = PlayerSide::new();
+        self.player_map = PlayerMap::new(&self.map_tilemap);
+        self.game_state = GameState::MAP;
+        self.init_sidemap = true;
     }
 
     pub fn run(&mut self) -> Option<MainState>{
@@ -155,14 +155,6 @@ impl Game{
             },
             GameState::MAP_SWAMP => {
                 self.current_tilemap_key = GameState::SWAMP;
-                self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
-                self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
-                self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
-                self.game_state = self.current_tilemap_key.clone();
-                None
-            },
-            GameState::MAP_SAND => {
-                self.current_tilemap_key = GameState::SAND;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
@@ -273,6 +265,18 @@ fn get_side_tilemap(json_vec: Vec<u8>) -> Tilemap {
     tilemap.visibility(tilemap.get_layer_id("logic"), false);
     tilemap.visibility(tilemap.get_layer_id("collision"), false);
     tilemap
+}
+
+fn get_tilemaps() -> HashMap<GameState,Tilemap>{
+    let mut tilemaps = HashMap::new();
+    tilemaps.insert(GameState::CEMETERY,get_side_tilemap(include_bytes!("../../assets/maps/cemetery.json").to_vec())); //Haar
+    tilemaps.insert(GameState::FOREST,get_side_tilemap(include_bytes!("../../assets/maps/green.json").to_vec())); //blume
+    tilemaps.insert(GameState::ICE,get_side_tilemap(include_bytes!("../../assets/maps/ice.json").to_vec())); //Stein
+    tilemaps.insert(GameState::SWAMP,get_side_tilemap(include_bytes!("../../assets/maps/swamp.json").to_vec())); // Frucht
+    tilemaps.insert(GameState::ZELDA1,get_side_tilemap(include_bytes!("../../assets/maps/zelda.json").to_vec())); // Zelda
+    tilemaps.insert(GameState::ZELDA2,get_side_tilemap(include_bytes!("../../assets/maps/zelda.json").to_vec())); // Zelda
+    tilemaps.insert(GameState::ZELDA3,get_side_tilemap(include_bytes!("../../assets/maps/tree.json").to_vec())); // Zelda
+    tilemaps
 }
 
 fn process_action() -> Option<MainState>{

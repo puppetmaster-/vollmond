@@ -3,10 +3,11 @@ name = "vollmond"
 version = "0.1.0"
 authors = ["puppetmaster"]
 edition = "2018"
-build = "build.rs"
+#build = "build.rs"
 
 [dependencies]
 quad-snd = { git = "https://github.com/not-fl3/quad-snd" }
+instant = { version = "0.1", features = [ "now" ] }
 
 [dependencies.macroquad]
 path = "../macroquad"
@@ -25,13 +26,13 @@ version = "1.0.0"
 [profile.dev.package.'*']
 opt-level = 3
 
-[profile.release]
-incremental = true
-lto = true
+#[profile.release]
+#incremental = true
+#lto = true
 
 #[build]
 #rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 
-[build-dependencies]
-winres = "0.1"
-image = "0.22.5"
+#[build-dependencies]
+#winres = "0.1"
+#image = "0.22.5"

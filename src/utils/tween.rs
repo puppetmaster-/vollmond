@@ -17,7 +17,7 @@ impl Tween{
     pub fn from_keyframes(keyframes: Vec<Keyframe<f32>>,start_at: u64, duration_sec: u64, repeat: bool) -> Tween{
         let sequence = AnimationSequence::from(keyframes);
         let mut timer = Timer::new_sec(duration_sec);
-        timer.advance_by(Duration::from_secs(start_at));
+        timer.advance_by((start_at / 1000) as f64);
         Self{
             timer,
             sequence: Some(sequence),

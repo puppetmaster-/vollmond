@@ -69,7 +69,6 @@ pub struct PlayerSide {
     jump_state: JumpState,
     animation_state: AnimationState,
     animations: HashMap<AnimationState, TileAnimation>,
-    start_timer: Timer,
     last_item_id: Option<u32>,
 }
 
@@ -97,7 +96,6 @@ impl PlayerSide {
             jump_state: JumpState::NOT,
             animation_state: AnimationState::STANDRIGHT,
             animations,
-            start_timer: Timer::new(500),
             last_item_id: None
         }
     }
@@ -109,166 +107,162 @@ impl PlayerSide {
             self.moving_timer = 0;
             self.break_timer = 0;
             self.need_reset = false;
-            self.start_timer.restart();
             self.last_item_id = None;
             self.animation_state = AnimationState::STANDRIGHT;
             for (_, a) in self.animations.iter_mut() {
                 a.reset();
             }
         }
-        if self.start_timer.finished() {
-            self.animations.get_mut(&self.animation_state).unwrap().advance();
 
-            let id_center = tilemap.get_id_at_position(tilemap.get_layer_id("logic"), self.position() + vec2(4.0, 4.0));
+        self.animations.get_mut(&self.animation_state).unwrap().advance();
 
-            self.collide_color = SKYBLUE;
+        let id_center = tilemap.get_id_at_position(tilemap.get_layer_id("logic"), self.position() + vec2(4.0, 4.0));
 
-            let delta = get_frame_time();
-            let mut new_x = self.position.x();
-            let mut new_y = self.position.y();
+        self.collide_color = SKYBLUE;
 
-            if is_key_down(KeyCode::A) || is_key_down(KeyCode::Left) {
-                let distance = 4.0 * MOVE_SPEED_CURVE[self.moving_timer] * delta;
-                if can_walk_left(vec2(self.position.x() - distance, self.position.y()), tilemap) {
-                    if self.animation_state != AnimationState::RUNLEFT{
-                        self.animations.get_mut(&self.animation_state).unwrap().reset();
-                        self.animation_state = AnimationState::RUNLEFT;
-                        self.animations.get_mut(&self.animation_state).unwrap().repeating = true;
-                    }
-                    self.state = State::RUN;
-                    self.direction = vec2(-1.0,0.0);
-                    new_x = self.position.x() - distance;
-                    if self.moving_timer < MOVE_SPEED_CURVE.len()-1{
-                        self.moving_timer +=1;
-                    }
-                    self.break_timer = 0;
-                } else {
-                    self.collide_color = GOLD;
+        let delta = get_frame_time();
+        let mut new_x = self.position.x();
+        let mut new_y = self.position.y();
+
+        if is_key_down(KeyCode::A) || is_key_down(KeyCode::Left) {
+            let distance = 4.0 * MOVE_SPEED_CURVE[self.moving_timer] * delta;
+            if can_walk_left(vec2(self.position.x() - distance, self.position.y()), tilemap) {
+                if self.animation_state != AnimationState::RUNLEFT{
+                    self.animations.get_mut(&self.animation_state).unwrap().reset();
+                    self.animation_state = AnimationState::RUNLEFT;
+                    self.animations.get_mut(&self.animation_state).unwrap().repeating = true;
                 }
-            } else if is_key_down(KeyCode::D) || is_key_down(KeyCode::Right) {
-                let distance = MOVE_FACTOR * MOVE_SPEED_CURVE[self.moving_timer] * delta;
-                if can_walk_right(vec2(self.position.x() + distance, self.position.y()), tilemap) {
-                    if self.animation_state != AnimationState::RUNRIGHT{
-                        self.animations.get_mut(&self.animation_state).unwrap().reset();
-                        self.animation_state = AnimationState::RUNRIGHT;
-                        self.animations.get_mut(&self.animation_state).unwrap().repeating = true;
-                    }
-                    self.state = State::RUN;
-                    self.direction = vec2(1.0,0.0);
-                    new_x = self.position.x() + distance;
-                    if self.moving_timer < MOVE_SPEED_CURVE.len()-1{
-                        self.moving_timer +=1;
-                    }
-                    self.break_timer = 0;
-                } else {
-                    self.collide_color = GOLD;
+                self.state = State::RUN;
+                self.direction = vec2(-1.0,0.0);
+                new_x = self.position.x() - distance;
+                if self.moving_timer < MOVE_SPEED_CURVE.len()-1{
+                    self.moving_timer +=1;
                 }
+                self.break_timer = 0;
             } else {
-                self.moving_timer = 0;
-                if self.break_timer < BREAK_SPEED_CURVE.len()-1 {
-                    new_x = self.position.x() + self.direction.x() * (MOVE_FACTOR + 2.0) * BREAK_SPEED_CURVE[self.break_timer] * delta;
-                    self.break_timer +=1;
+                self.collide_color = GOLD;
+            }
+        } else if is_key_down(KeyCode::D) || is_key_down(KeyCode::Right) {
+            let distance = MOVE_FACTOR * MOVE_SPEED_CURVE[self.moving_timer] * delta;
+            if can_walk_right(vec2(self.position.x() + distance, self.position.y()), tilemap) {
+                if self.animation_state != AnimationState::RUNRIGHT{
+                    self.animations.get_mut(&self.animation_state).unwrap().reset();
+                    self.animation_state = AnimationState::RUNRIGHT;
+                    self.animations.get_mut(&self.animation_state).unwrap().repeating = true;
                 }
-                match self.animation_state {
-                    AnimationState::RUNLEFT => {
-                        self.animations.get_mut(&self.animation_state).unwrap().repeating = false;
-                        if self.animations.get_mut(&self.animation_state).unwrap().finish() {
-                            self.animations.get_mut(&self.animation_state).unwrap().reset();
-                            self.animation_state = AnimationState::STANDLEFT;
-                        }
+                self.state = State::RUN;
+                self.direction = vec2(1.0,0.0);
+                new_x = self.position.x() + distance;
+                if self.moving_timer < MOVE_SPEED_CURVE.len()-1{
+                    self.moving_timer +=1;
+                }
+                self.break_timer = 0;
+            } else {
+                self.collide_color = GOLD;
+            }
+        } else {
+            self.moving_timer = 0;
+            if self.break_timer < BREAK_SPEED_CURVE.len()-1 {
+                new_x = self.position.x() + self.direction.x() * (MOVE_FACTOR + 2.0) * BREAK_SPEED_CURVE[self.break_timer] * delta;
+                self.break_timer +=1;
+            }
+            match self.animation_state {
+                AnimationState::RUNLEFT => {
+                    self.animations.get_mut(&self.animation_state).unwrap().repeating = false;
+                    if self.animations.get_mut(&self.animation_state).unwrap().finish() {
+                        self.animations.get_mut(&self.animation_state).unwrap().reset();
+                        self.animation_state = AnimationState::STANDLEFT;
                     }
-                    AnimationState::RUNRIGHT => {
-                        self.animations.get_mut(&self.animation_state).unwrap().repeating = false;
-                        if self.animations.get_mut(&self.animation_state).unwrap().finish() {
-                            self.animations.get_mut(&self.animation_state).unwrap().reset();
-                            self.animation_state = AnimationState::STANDRIGHT;
-                        }
+                }
+                AnimationState::RUNRIGHT => {
+                    self.animations.get_mut(&self.animation_state).unwrap().repeating = false;
+                    if self.animations.get_mut(&self.animation_state).unwrap().finish() {
+                        self.animations.get_mut(&self.animation_state).unwrap().reset();
+                        self.animation_state = AnimationState::STANDRIGHT;
                     }
-                    _ => {}
                 }
-            };
-            // jump
-            if (is_key_down(KeyCode::Space ) || is_key_down(KeyCode::Up )) && (self.jump_state == JumpState::JUMP || self.jump_state == JumpState::NOT)  {
-                if self.jump_up_timer < JUMP_UP_CURVE.len()-1 {
-                    self.jump_state = JumpState::JUMP;
-                    self.jump_up_timer += 1;
-                    new_y = self.position.y() - JUMP_UP_FACTOR + JUMP_UP_CURVE[self.jump_up_timer] * delta;
-                    new_x = new_x + self.direction.x() * 0.2;
-                }else{
-                    self.jump_state = JumpState::AIR;
-                }
+                _ => {}
             }
-
-            //stop jumping
-            if (!is_key_down(KeyCode::Space) && !is_key_down(KeyCode::Up)) && self.jump_state == JumpState::JUMP {
-                self.jump_state = JumpState::AIR;
-                self.jump_up_timer = 0;
-            }
-
-            if self.jump_state == JumpState::AIR{
-                if self.air_timer < AIR_TIMER_MAX{
-                    self.air_timer +=1;
-                }else{
-                    self.air_timer = 0;
-                    self.jump_state = JumpState::DOWN;
-                }
-            }
-
-            if self.jump_state == JumpState::DOWN || self.jump_state == JumpState::NOT {
-                if can_walk_down(vec2(self.position.x(), self.position.y()), tilemap) {
-                    if self.jump_down_timer < JUMP_DOWN_CURVE.len()-1 {
-                        self.jump_down_timer += 1;
-                    }
-                    new_y = self.position.y() + JUMP_DOWN_FACTOR + JUMP_DOWN_CURVE[self.jump_down_timer]* delta;
-                    new_x = new_x + self.direction.x()  * 0.2;
-                    self.jump_state = JumpState::DOWN;
-                }else{
-                    self.jump_down_timer = 0;
-                    self.jump_up_timer = 0;
-                    self.jump_state =JumpState::NOT;
-                    self.state = State::FLOOR;
-                }
-            }
-
-            if self.position.x() == new_x && self.position.y() == new_y {
-                if self.position.y() % 8.0 > 0.0{
-                    self.position = vec2(self.position.x(),self.position.y()-self.position.y() % 8.0);
-                }
-                self.direction = vec2(0.0,0.0);
-                self.position.set_x(new_x);
+        };
+        // jump
+        if (is_key_down(KeyCode::Space ) || is_key_down(KeyCode::Up )) && (self.jump_state == JumpState::JUMP || self.jump_state == JumpState::NOT)  {
+            if self.jump_up_timer < JUMP_UP_CURVE.len()-1 {
+                self.jump_state = JumpState::JUMP;
+                self.jump_up_timer += 1;
+                new_y = self.position.y() - JUMP_UP_FACTOR + JUMP_UP_CURVE[self.jump_up_timer] * delta;
+                new_x = new_x + self.direction.x() * 0.2;
             }else{
-                self.position.set_x(new_x);
-                self.position.set_y(new_y);
+                self.jump_state = JumpState::AIR;
             }
+        }
 
-            match id_center{
-                Some(id) => {
-                    println!("{}",id);
-                    match id{
-                        SPAWN_ID => None,
-                        EXIT => { self.need_reset = true; Some(GameState::MAP)},
-                        ITEM_ZELDA => {
-                            if self.last_item_id != Some(id) {
-                                self.last_item_id = Some(id);
-                                self.bonus +=1;
-                                tilemap.replace_all_tileid(tilemap.get_layer_id("logic"),ITEM_ZELDA,None);
-                            }
-                            None
-                        },
-                        _ => {
-                            if self.last_item_id != Some(id) {
-                                self.last_item_id = Some(id);
-                                self.ingredients +=1;
-                                tilemap.replace_all_tileid(tilemap.get_layer_id("logic"),id,None);
-                            }
-                            None
+        //stop jumping
+        if (!is_key_down(KeyCode::Space) && !is_key_down(KeyCode::Up)) && self.jump_state == JumpState::JUMP {
+            self.jump_state = JumpState::AIR;
+            self.jump_up_timer = 0;
+        }
+
+        if self.jump_state == JumpState::AIR{
+            if self.air_timer < AIR_TIMER_MAX{
+                self.air_timer +=1;
+            }else{
+                self.air_timer = 0;
+                self.jump_state = JumpState::DOWN;
+            }
+        }
+
+        if self.jump_state == JumpState::DOWN || self.jump_state == JumpState::NOT {
+            if can_walk_down(vec2(self.position.x(), self.position.y()), tilemap) {
+                if self.jump_down_timer < JUMP_DOWN_CURVE.len()-1 {
+                    self.jump_down_timer += 1;
+                }
+                new_y = self.position.y() + JUMP_DOWN_FACTOR + JUMP_DOWN_CURVE[self.jump_down_timer]* delta;
+                new_x = new_x + self.direction.x()  * 0.2;
+                self.jump_state = JumpState::DOWN;
+            }else{
+                self.jump_down_timer = 0;
+                self.jump_up_timer = 0;
+                self.jump_state =JumpState::NOT;
+                self.state = State::FLOOR;
+            }
+        }
+
+        if self.position.x() == new_x && self.position.y() == new_y {
+            if self.position.y() % 8.0 > 0.0{
+                self.position = vec2(self.position.x(),self.position.y()-self.position.y() % 8.0);
+            }
+            self.direction = vec2(0.0,0.0);
+            self.position.set_x(new_x);
+        }else{
+            self.position.set_x(new_x);
+            self.position.set_y(new_y);
+        }
+
+        match id_center{
+            Some(id) => {
+                println!("{}",id);
+                match id{
+                    SPAWN_ID => None,
+                    EXIT => { self.need_reset = true; Some(GameState::MAP)},
+                    ITEM_ZELDA => {
+                        if self.last_item_id != Some(id) {
+                            self.last_item_id = Some(id);
+                            self.bonus +=1;
+                            tilemap.replace_all_tileid(tilemap.get_layer_id("logic"),ITEM_ZELDA,None);
                         }
+                        None
+                    },
+                    _ => {
+                        if self.last_item_id != Some(id) {
+                            self.last_item_id = Some(id);
+                            self.ingredients +=1;
+                            tilemap.replace_all_tileid(tilemap.get_layer_id("logic"),id,None);
+                        }
+                        None
                     }
                 }
-                _ => None
             }
-        }else{
-            None
+            _ => None
         }
     }
 
