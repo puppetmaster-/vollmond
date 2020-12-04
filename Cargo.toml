@@ -7,7 +7,9 @@ edition = "2018"
 
 [dependencies]
 quad-snd = { git = "https://github.com/not-fl3/quad-snd" }
-instant = { version = "0.1", features = [ "now" ] }
+
+[dependencies.miniquad]
+version = "0.3.0-alpha.22"
 
 [dependencies.macroquad]
 path = "../macroquad"

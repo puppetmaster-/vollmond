@@ -4,7 +4,6 @@ pub use keyframe::functions::*;
 pub use keyframe_derive::*;
 
 use crate::utils::timer::Timer;
-use std::time::Duration;
 
 pub struct Tween {
     timer: Timer,
@@ -14,10 +13,10 @@ pub struct Tween {
 
 #[allow(dead_code)]
 impl Tween{
-    pub fn from_keyframes(keyframes: Vec<Keyframe<f32>>,start_at: u64, duration_sec: u64, repeat: bool) -> Tween{
+    pub fn from_keyframes(keyframes: Vec<Keyframe<f32>>,start_at_sec: u64, duration_sec: u64, repeat: bool) -> Tween{
         let sequence = AnimationSequence::from(keyframes);
         let mut timer = Timer::new_sec(duration_sec);
-        timer.advance_by((start_at / 1000) as f64);
+        timer.advance_by_sec(start_at_sec as f64);
         Self{
             timer,
             sequence: Some(sequence),
