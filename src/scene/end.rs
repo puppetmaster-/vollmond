@@ -1,14 +1,11 @@
 use macroquad::prelude::*;
 use std::future::Future;
 use crate::{MainState, TITLE_ZOOM, FONT_COLOR};
-use crate::utils::timer::Timer;
 
 pub struct End{
     camera: Camera2D,
     font: Font,
-    show_text1: bool,
     text1: String,
-    timer: Timer,
 }
 
 impl End{
@@ -25,9 +22,7 @@ impl End{
             End {
                 camera,
                 font,
-                show_text1: true,
                 text1: text1.to_string(),
-                timer: Timer::new_sec(3),
             }
         }
     }
@@ -42,7 +37,6 @@ impl End{
             draw_text_ex(line, (screen_width()/2.0)-350.0, (screen_height()/2.0) - 350.0 + i as f32 * 80.0, tp);
         }
         draw_text_ex(format!("{} / 3 secrets found", secrets).as_str(),(screen_width()/2.0)-180.0, (screen_height()/2.0)+ 200.0 , tp);
-
 
         if get_last_key_pressed().is_some() {
             return Some(MainState::TITLE);

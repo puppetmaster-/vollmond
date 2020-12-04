@@ -80,7 +80,6 @@ impl Tilemap{
                 for y in 0..self.height {
                     if let Some(tile) = layer.tiles.get_mut(x, y) {
                         if tile.id == old_id {
-                            println!("found");
                             if let Some(id) = new_id {
                                 tile.id = id;
                             } else {
@@ -232,7 +231,7 @@ impl Tilemap{
                             });
                             if DEBUG {
                                 draw_rectangle_lines(tmp_pos.x(), tmp_pos.y(), 8.0, 8.0, 0.1, GREEN);
-                                draw_circle(tmp_pos.x(), tmp_pos.y(),0.5, RED);
+                                //draw_circle(tmp_pos.x(), tmp_pos.y(),0.5, RED); //low fps
                             }
                         }
                     }

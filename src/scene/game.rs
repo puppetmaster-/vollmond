@@ -6,7 +6,7 @@ use std::future::Future;
 use crate::entity::player_side::{PlayerSide, SPAWN_ID};
 use std::collections::HashMap;
 use keyframe::Keyframe;
-use keyframe::functions::{EaseInOut, Linear, EaseOut, EaseIn};
+use keyframe::functions::{EaseOut, EaseIn};
 use crate::utils::tween::Tween;
 
 const OFFSET_CAMERA: f32 = 15.0;
@@ -14,24 +14,25 @@ const OFFSET_CAMERA: f32 = 15.0;
 #[allow(dead_code)]
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum GameState{
+    SideMap,
     MAP,
-    MAP_HOUSE,
+    MapHouse,
     HOUSE,
-    MAP_CEMETERY,
+    MapCemetery,
     CEMETERY,
-    MAP_ICE,
+    MapIce,
     ICE,
-    MAP_FOREST,
+    MapForest,
     FOREST,
-    MAP_SWAMP,
+    MapSwamp,
     SWAMP,
-    MAP_SAND,
+    MapSand,
     SAND,
-    MAP_ZELDA1,
+    MapZelda1,
     ZELDA1,
-    MAP_ZELDA2,
+    MapZelda2,
     ZELDA2,
-    MAP_ZELDA3,
+    MapZelda3,
     ZELDA3,
 }
 
@@ -89,7 +90,7 @@ impl Game{
                 player_side,
                 map_tilemap,
                 tilemaps: get_tilemaps(),
-                current_tilemap_key: GameState::MAP_CEMETERY,
+                current_tilemap_key: GameState::MapCemetery,
                 camera_map,
                 camera_side,
                 camera_sky,
@@ -130,14 +131,14 @@ impl Game{
                 set_default_camera();
                 process_action()
             },
-            GameState::MAP_HOUSE => {
+            GameState::MapHouse => {
                 self.game_state = GameState::HOUSE;
                 None
             },
             GameState::HOUSE => {
                 Some(MainState::END)
             },
-            GameState::MAP_CEMETERY => {
+            GameState::MapCemetery => {
                 self.current_tilemap_key = GameState::CEMETERY;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
@@ -145,7 +146,7 @@ impl Game{
                 self.game_state = self.current_tilemap_key.clone();
                 None
             },
-            GameState::MAP_ICE => {
+            GameState::MapIce => {
                 self.current_tilemap_key = GameState::ICE;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
@@ -153,7 +154,7 @@ impl Game{
                 self.game_state = self.current_tilemap_key.clone();
                 None
             },
-            GameState::MAP_SWAMP => {
+            GameState::MapSwamp => {
                 self.current_tilemap_key = GameState::SWAMP;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
@@ -161,7 +162,7 @@ impl Game{
                 self.game_state = self.current_tilemap_key.clone();
                 None
             },
-            GameState::MAP_FOREST=> {
+            GameState::MapForest => {
                 self.current_tilemap_key = GameState::FOREST;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
@@ -169,15 +170,15 @@ impl Game{
                 self.game_state = self.current_tilemap_key.clone();
                 None
             },
-            GameState::MAP_ZELDA1=> {
+            GameState::MapZelda1 => {
                 self.current_tilemap_key = GameState::ZELDA1;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
-                self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
+                self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-1000.0);
                 self.game_state = self.current_tilemap_key.clone();
                 None
             },
-            GameState::MAP_ZELDA2=> {
+            GameState::MapZelda2 => {
                 self.current_tilemap_key = GameState::ZELDA2;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
@@ -185,7 +186,7 @@ impl Game{
                 self.game_state = self.current_tilemap_key.clone();
                 None
             },
-            GameState::MAP_ZELDA3=> {
+            GameState::MapZelda3 => {
                 self.current_tilemap_key = GameState::ZELDA3;
                 self.player_side.position = self.tilemaps.get(&self.current_tilemap_key).unwrap().get_all_position_from_id(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("logic"),SPAWN_ID)[0];
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);

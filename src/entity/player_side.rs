@@ -10,10 +10,10 @@ use crate::utils::timer::Timer;
 
 pub const SPAWN_ID: u32 = 507;
 const EXIT: u32 = 510;
-const ITEM_STONE: u32 = 474;
-const ITEM_HAIR: u32 = 476;
-const ITEM_FRUIT: u32 = 477;
-const ITEM_FLOWER: u32 = 475;
+//const ITEM_STONE: u32 = 474;
+//const ITEM_HAIR: u32 = 476;
+//const ITEM_FRUIT: u32 = 477;
+//const ITEM_FLOWER: u32 = 475;
 const ITEM_ZELDA: u32 = 478;
 
 const JUMP_UP_FACTOR: f32 = 2.5;
@@ -52,7 +52,6 @@ enum AnimationState{
 pub struct PlayerSide {
     pub ingredients: u8,
     pub bonus: u8,
-    moving_speed: f32,
     moving_timer: usize,
     break_timer: usize,
     air_timer: usize,
@@ -62,7 +61,6 @@ pub struct PlayerSide {
     pub position: Vec2,
     collide_color: Color,
     spritesheet: Texture2D,
-    start_position: Vec2,
     need_reset: bool,
     jump_timer: u32,
     state: State,
@@ -79,7 +77,6 @@ impl PlayerSide {
         Self {
             ingredients: 0,
             bonus: 0,
-            moving_speed: 0.0,
             moving_timer: 0,
             break_timer: 0,
             air_timer: 0,
@@ -89,7 +86,6 @@ impl PlayerSide {
             position: Vec2::zero(),
             collide_color: SKYBLUE,
             spritesheet,
-            start_position: Vec2::zero(),
             need_reset: true,
             jump_timer: 0,
             state: State::FLOOR,
@@ -108,6 +104,7 @@ impl PlayerSide {
             self.break_timer = 0;
             self.need_reset = false;
             self.last_item_id = None;
+            self.timer.restart();
             self.animation_state = AnimationState::STANDRIGHT;
             for (_, a) in self.animations.iter_mut() {
                 a.reset();
