@@ -176,6 +176,7 @@ impl Game{
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-1000.0);
                 self.game_state = self.current_tilemap_key.clone();
+                self.map_tilemap.set_tileid_at(self.map_tilemap.get_layer_id("deco"),544, self.player_map.position+vec2(4.0,4.0));
                 None
             },
             GameState::MapZelda2 => {
@@ -184,6 +185,7 @@ impl Game{
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
+                self.map_tilemap.set_tileid_at(self.map_tilemap.get_layer_id("deco"),543, self.player_map.position+vec2(4.0,4.0));
                 None
             },
             GameState::MapZelda3 => {

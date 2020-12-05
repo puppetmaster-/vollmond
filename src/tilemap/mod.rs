@@ -95,10 +95,18 @@ impl Tilemap{
     }
 
     pub fn set_tileid_at(&mut self, layer: usize, new_id: u32, position: Vec2){
-        let x = (position.x() as i32/ self.tile_width) as usize;
-        let y = (position.y() as i32 / self.tile_height) as usize;
+        let mut pos_x = position.x() as i32;
+        let mut pos_y = position.y() as i32;
+        if pos_x % 8 != 0 {
+            pos_x -= pos_x % 8;
+        }
+        if pos_y % 8 != 0 {
+            pos_y -= pos_y % 8;
+        }
+        let x = pos_x as i32 / self.tile_width;
+        let y = pos_y as i32 / self.tile_height;
         if let Some(layer) = self.layers.get_mut(layer){
-            match layer.tiles.get_mut(x, y){
+            match layer.tiles.get_mut(x as _, y as _){
                 None => layer.tiles.set(Tile{
                     id: new_id,
                     x: x as i32,
@@ -106,7 +114,7 @@ impl Tilemap{
                     position_x: (x as i32 * self.tile_width) as f32,
                     position_y: (y as i32 * self.tile_height) as f32,
                     ..Tile::default()
-                }, x, y),
+                }, x as _, y as _),
                 Some(tile) => tile.id = new_id,
             };
         }else{
