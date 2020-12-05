@@ -50,6 +50,7 @@ pub struct Game {
     game_state: GameState,
     init_sidemap: bool,
     item_tween: Tween,
+    draw_sky: bool,
 }
 
 impl Game{
@@ -97,6 +98,7 @@ impl Game{
                 game_state: GameState::MAP,
                 init_sidemap: true,
                 item_tween: tween,
+                draw_sky: true,
             }
         }
     }
@@ -144,6 +146,7 @@ impl Game{
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
+                self.draw_sky = true;
                 None
             },
             GameState::MapIce => {
@@ -152,6 +155,7 @@ impl Game{
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
+                self.draw_sky = true;
                 None
             },
             GameState::MapSwamp => {
@@ -160,6 +164,7 @@ impl Game{
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
+                self.draw_sky = true;
                 None
             },
             GameState::MapForest => {
@@ -168,6 +173,7 @@ impl Game{
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
+                self.draw_sky = true;
                 None
             },
             GameState::MapZelda1 => {
@@ -176,6 +182,7 @@ impl Game{
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-1000.0);
                 self.game_state = self.current_tilemap_key.clone();
+                self.draw_sky = false;
                 self.map_tilemap.set_tileid_at(self.map_tilemap.get_layer_id("deco"),544, self.player_map.position+vec2(4.0,4.0));
                 None
             },
@@ -185,6 +192,7 @@ impl Game{
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
+                self.draw_sky = false;
                 self.map_tilemap.set_tileid_at(self.map_tilemap.get_layer_id("deco"),543, self.player_map.position+vec2(4.0,4.0));
                 None
             },
@@ -194,6 +202,7 @@ impl Game{
                 self.camera_side.target = self.player_side.position()-vec2(4.0,OFFSET_CAMERA);
                 self.camera_sky.target = self.player_side.position()-vec2(-100.0,OFFSET_CAMERA-10.0);
                 self.game_state = self.current_tilemap_key.clone();
+                self.draw_sky = true;
                 None
             },
             _ => {
@@ -202,7 +211,9 @@ impl Game{
                 }
                 update_sky_camera(self);
                 set_camera(self.camera_sky);
-                self.tilemaps.get(&self.current_tilemap_key).unwrap().draw(self.side_texture, vec2(0.0, 0.0), Some(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("sky")));
+                if self.draw_sky{
+                    self.tilemaps.get(&self.current_tilemap_key).unwrap().draw(self.side_texture, vec2(0.0, 0.0), Some(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("sky")));
+                }
                 set_default_camera();
                 update_side_camera(self, self.player_side.position());
                 set_camera(self.camera_side);
