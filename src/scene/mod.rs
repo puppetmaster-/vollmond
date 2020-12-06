@@ -1,4 +1,4 @@
-pub(crate) mod title;
+pub(crate) mod end;
 pub(crate) mod game;
 pub(crate) mod story;
-pub(crate) mod end;
+pub(crate) mod title;

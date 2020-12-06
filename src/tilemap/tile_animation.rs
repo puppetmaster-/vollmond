@@ -1,9 +1,9 @@
 use crate::tilemap::Tilemap;
-use std::time::Duration;
 use macroquad::prelude::{get_frame_time, Rect};
+use std::time::Duration;
 
 #[derive(Debug, Clone)]
-pub struct TileAnimation{
+pub struct TileAnimation {
     frames: Vec<Rect>,
     frame_length: Duration,
     tile_durations: Vec<Duration>,
@@ -14,14 +14,14 @@ pub struct TileAnimation{
 
 #[allow(dead_code)]
 impl TileAnimation {
-    pub fn new(tilemap: &Tilemap, tile_ids: &[u32], mut tile_durations: Vec<Duration>) -> Self{
-        if tile_ids.len() != tile_durations.len(){
+    pub fn new(tilemap: &Tilemap, tile_ids: &[u32], mut tile_durations: Vec<Duration>) -> Self {
+        if tile_ids.len() != tile_durations.len() {
             let duration = tile_durations[0];
-            for _i in tile_durations.len()..tile_ids.len(){
+            for _i in tile_durations.len()..tile_ids.len() {
                 tile_durations.push(duration);
             }
         }
-        TileAnimation{
+        TileAnimation {
             frames: tilemap.get_frames_from_ids(tile_ids),
             frame_length: tile_durations[0],
             tile_durations,
@@ -31,8 +31,8 @@ impl TileAnimation {
         }
     }
 
-    pub fn once(tilemap: &Tilemap, tile_ids: &[u32],tile_durations: Vec<Duration>) -> Self{
-        TileAnimation{
+    pub fn once(tilemap: &Tilemap, tile_ids: &[u32], tile_durations: Vec<Duration>) -> Self {
+        TileAnimation {
             frames: tilemap.get_frames_from_ids(tile_ids),
             frame_length: tile_durations[0],
             tile_durations,
@@ -66,18 +66,20 @@ impl TileAnimation {
         self.timer = Duration::from_secs(0);
     }
 
-    pub fn finish(&mut self) -> bool{
-        if !self.repeating{
-            return self.current_frame == self.frames.len()-1 || self.current_frame == 0 || self.current_frame == (self.frames.len()-1)/2;
+    pub fn finish(&mut self) -> bool {
+        if !self.repeating {
+            return self.current_frame == self.frames.len() - 1
+                || self.current_frame == 0
+                || self.current_frame == (self.frames.len() - 1) / 2;
         }
         false
     }
 
-    pub fn reset(&mut self){
+    pub fn reset(&mut self) {
         self.current_frame = 0;
     }
 
-    pub fn source(&self) -> Option<Rect>{
+    pub fn source(&self) -> Option<Rect> {
         Some(self.frames[self.current_frame])
     }
 }
