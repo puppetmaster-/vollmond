@@ -1,3 +1,4 @@
+use crate::constants::FLOAT_CMP_ERROR_MARGIN;
 use crate::scene::game::GameState;
 use crate::tilemap::Tilemap;
 use crate::utils::timer::Timer;
@@ -23,6 +24,7 @@ const ZELDA1: u32 = 513;
 const ZELDA2: u32 = 514;
 const ZELDA3: u32 = 515;
 const FOREST: u32 = 516;
+pub const SECRET: u32 = 519;
 
 // moving speed
 const GROUND_GRASS: u32 = 533;
@@ -30,6 +32,7 @@ const GROUND_ICE: u32 = 535;
 const GROUND_ROCK: u32 = 534;
 const GROUND_SAND: u32 = 536;
 const GROUND_SWAMP: u32 = 537;
+const GROUND_WATER: u32 = 524;
 //const GROUND_STREET: u32 = 540;
 
 pub struct PlayerMap {
@@ -40,7 +43,7 @@ pub struct PlayerMap {
     source_down: Option<Rect>,
     source: Option<Rect>,
     collide_color: Color,
-    last_id: Option<u32>,
+    pub last_id: Option<u32>,
     timer: Timer,
 }
 
@@ -61,14 +64,9 @@ impl PlayerMap {
     }
     pub fn update(&mut self, tilemap: &Tilemap) -> Option<GameState> {
         if self.timer.finished() {
-            let id_center = tilemap.get_id_at_position(
-                tilemap.get_layer_id("logic"),
-                self.position() + vec2(4.0, 4.0),
-            );
-            let ground = tilemap.get_id_at_position(
-                tilemap.get_layer_id("background"),
-                self.position() + vec2(4.0, 4.0),
-            );
+            let id_center = tilemap.get_id_at_position(tilemap.get_layer_id("logic"), self.position() + vec2(4.0, 4.0));
+            #[rustfmt::skip]
+            let ground = tilemap.get_id_at_position(tilemap.get_layer_id("background"), self.position() + vec2(4.0, 4.0));
 
             let moving_speed_factor = match ground {
                 Some(id) => match id {
@@ -77,6 +75,7 @@ impl PlayerMap {
                     GROUND_SAND => 0.6,
                     GROUND_ICE => 1.1,
                     GROUND_SWAMP => 0.4,
+                    GROUND_WATER => 0.3,
                     _ => 1.0,
                 },
                 _ => 1.0,
@@ -88,40 +87,28 @@ impl PlayerMap {
             let mut new_y = self.position.y();
 
             if is_key_down(KeyCode::W) || is_key_down(KeyCode::Up) {
-                if can_walk_up(
-                    vec2(self.position.x(), self.position.y() - velocity),
-                    tilemap,
-                ) {
+                if can_walk_up(vec2(self.position.x(), self.position.y() - velocity), tilemap) {
                     new_y = self.position.y() - velocity;
                     self.source = self.source_up;
                 } else {
                     self.collide_color = GOLD;
                 }
             } else if is_key_down(KeyCode::S) || is_key_down(KeyCode::Down) {
-                if can_walk_down(
-                    vec2(self.position.x(), self.position.y() + velocity),
-                    tilemap,
-                ) {
+                if can_walk_down(vec2(self.position.x(), self.position.y() + velocity), tilemap) {
                     new_y = self.position.y() + velocity;
                     self.source = self.source_down;
                 } else {
                     self.collide_color = GOLD;
                 }
             } else if is_key_down(KeyCode::A) || is_key_down(KeyCode::Left) {
-                if can_walk_left(
-                    vec2(self.position.x() - velocity, self.position.y()),
-                    tilemap,
-                ) {
+                if can_walk_left(vec2(self.position.x() - velocity, self.position.y()), tilemap) {
                     new_x = self.position.x() - velocity;
                     self.source = self.source_left;
                 } else {
                     self.collide_color = GOLD;
                 }
             } else if is_key_down(KeyCode::D) || is_key_down(KeyCode::Right) {
-                if can_walk_right(
-                    vec2(self.position.x() + velocity, self.position.y()),
-                    tilemap,
-                ) {
+                if can_walk_right(vec2(self.position.x() + velocity, self.position.y()), tilemap) {
                     new_x = self.position.x() + velocity;
                     self.source = self.source_right;
                 } else {
@@ -130,20 +117,14 @@ impl PlayerMap {
             } else {
             };
 
-            if new_x == self.position.x() {
+            if (new_x - self.position.x()).abs() < FLOAT_CMP_ERROR_MARGIN {
                 if self.position.x() % 1.0 > 0.0 {
-                    self.position = vec2(
-                        self.position.x() - self.position.x() % 1.0,
-                        self.position.y(),
-                    );
+                    self.position = vec2(self.position.x() - self.position.x() % 1.0, self.position.y());
                 }
                 self.position.set_y(new_y);
-            } else if new_y == self.position.y() {
+            } else if (new_y - self.position.y()).abs() < FLOAT_CMP_ERROR_MARGIN {
                 if self.position.y() % 1.0 > 0.0 {
-                    self.position = vec2(
-                        self.position.x(),
-                        self.position.y() - self.position.y() % 1.0,
-                    );
+                    self.position = vec2(self.position.x(), self.position.y() - self.position.y() % 1.0);
                 }
                 self.position.set_x(new_x);
             } else {
@@ -179,6 +160,9 @@ impl PlayerMap {
             } else if id_center == Some(ZELDA3) && self.last_id != Some(ZELDA3) {
                 self.last_id = Some(ZELDA3);
                 Some(GameState::MapZelda3)
+            } else if id_center == Some(SECRET) && self.last_id != Some(SECRET) {
+                self.last_id = Some(SECRET);
+                None
             } else if id_center.is_none() {
                 self.last_id = None;
                 None
@@ -206,58 +190,26 @@ impl PlayerMap {
             },
         );
         if DEBUG {
-            draw_circle(
-                self.position.x().round(),
-                self.position.y().round(),
-                0.5,
-                RED,
-            );
-            draw_rectangle_lines(
-                self.position().x(),
-                self.position().y(),
-                7.0,
-                7.0,
-                0.1,
-                self.collide_color,
-            );
-            draw_circle(
-                (self.position() + vec2(4.0, 4.0)).x(),
-                (self.position() + vec2(4.0, 4.0)).y(),
-                0.5,
-                RED,
-            );
-            draw_circle(
-                (self.position + vec2(2.0, 3.0)).x(),
-                (self.position + vec2(2.0, 3.0)).y(),
-                0.5,
-                GREEN,
-            );
-            draw_circle(
-                (self.position + vec2(2.0, 8.0)).x(),
-                (self.position + vec2(2.0, 8.0)).y(),
-                0.5,
-                GREEN,
-            );
-            draw_circle(
-                (self.position + vec2(6.0, 8.0)).x(),
-                (self.position + vec2(6.0, 8.0)).y(),
-                0.5,
-                GREEN,
-            );
-            draw_circle(
-                (self.position + vec2(6.0, 3.0)).x(),
-                (self.position + vec2(6.0, 3.0)).y(),
-                0.5,
-                GREEN,
-            );
+            draw_circle(self.position.x().round(), self.position.y().round(), 0.5, RED);
+            #[rustfmt::skip]
+            draw_rectangle_lines(self.position().x(), self.position().y(), 7.0, 7.0, 0.1, self.collide_color);
+            #[rustfmt::skip]
+            draw_circle((self.position() + vec2(4.0, 4.0)).x(), (self.position() + vec2(4.0, 4.0)).y(), 0.5, RED);
+            #[rustfmt::skip]
+            draw_circle((self.position + vec2(2.0, 3.0)).x(), (self.position + vec2(2.0, 3.0)).y(), 0.5, GREEN);
+            #[rustfmt::skip]
+            draw_circle((self.position + vec2(2.0, 8.0)).x(), (self.position + vec2(2.0, 8.0)).y(), 0.5, GREEN);
+            #[rustfmt::skip]
+            draw_circle((self.position + vec2(6.0, 8.0)).x(), (self.position + vec2(6.0, 8.0)).y(), 0.5, GREEN);
+            #[rustfmt::skip]
+            draw_circle((self.position + vec2(6.0, 3.0)).x(), (self.position + vec2(6.0, 3.0)).y(), 0.5, GREEN);
         }
     }
 }
 
 fn can_walk_left(new_position: Vec2, tilemap: &Tilemap) -> bool {
     let id = tilemap.get_id_at_position(tilemap.get_layer_id("map"), new_position + vec2(2.0, 3.0));
-    let id2 =
-        tilemap.get_id_at_position(tilemap.get_layer_id("map"), new_position + vec2(2.0, 7.0));
+    let id2 = tilemap.get_id_at_position(tilemap.get_layer_id("map"), new_position + vec2(2.0, 7.0));
     if let Some(i) = id {
         if i >= 520 && i <= 532 {
             return false;
@@ -274,69 +226,50 @@ fn can_walk_left(new_position: Vec2, tilemap: &Tilemap) -> bool {
 
 fn can_walk_right(new_position: Vec2, tilemap: &Tilemap) -> bool {
     let id = tilemap.get_id_at_position(tilemap.get_layer_id("map"), new_position + vec2(5.5, 3.0));
-    let id2 =
-        tilemap.get_id_at_position(tilemap.get_layer_id("map"), new_position + vec2(5.5, 7.0));
-    match id {
-        Some(i) => {
-            if i >= 520 && i <= 532 {
-                return false;
-            }
+    let id2 = tilemap.get_id_at_position(tilemap.get_layer_id("map"), new_position + vec2(5.5, 7.0));
+    if let Some(i) = id {
+        if i >= 520 && i <= 532 {
+            return false;
         }
-        _ => {}
     }
-    match id2 {
-        Some(i) => {
-            if i >= 520 && i <= 532 {
-                return false;
-            }
+    if let Some(i) = id2 {
+        if i >= 520 && i <= 532 {
+            return false;
         }
-        _ => {}
     }
     true
 }
 
 fn can_walk_up(new_position: Vec2, tilemap: &Tilemap) -> bool {
     let id = tilemap.get_id_at_position(tilemap.get_layer_id("map"), new_position + vec2(2.0, 3.0));
-    let id2 =
-        tilemap.get_id_at_position(tilemap.get_layer_id("map"), new_position + vec2(5.0, 3.0));
-    match id {
-        Some(i) => {
-            if i >= 520 && i <= 532 {
-                return false;
-            }
+    let id2 = tilemap.get_id_at_position(tilemap.get_layer_id("map"), new_position + vec2(5.0, 3.0));
+    if let Some(i) = id {
+        if i >= 520 && i <= 532 {
+            return false;
         }
-        _ => {}
     }
-    match id2 {
-        Some(i) => {
-            if i >= 520 && i <= 532 {
-                return false;
-            }
+    if let Some(i) = id2 {
+        if i >= 520 && i <= 532 {
+            return false;
         }
-        _ => {}
     }
     true
 }
 
 fn can_walk_down(new_position: Vec2, tilemap: &Tilemap) -> bool {
     let id = tilemap.get_id_at_position(tilemap.get_layer_id("map"), new_position + vec2(2.0, 7.0));
-    let id2 =
-        tilemap.get_id_at_position(tilemap.get_layer_id("map"), new_position + vec2(5.0, 7.0));
-    match id {
-        Some(i) => {
-            if i >= 520 && i <= 532 {
-                return false;
-            }
+    let id2 = tilemap.get_id_at_position(tilemap.get_layer_id("map"), new_position + vec2(5.0, 7.0));
+
+    if let Some(i) = id {
+        if i >= 520 && i <= 532 {
+            return false;
         }
-        _ => {}
     }
-    match id2 {
-        Some(i) => {
-            if i >= 520 && i <= 532 {
-                return false;
-            }
+
+    if let Some(i) = id2 {
+        if i >= 520 && i <= 532 {
+            return false;
         }
-        _ => {}
     }
     true
 }

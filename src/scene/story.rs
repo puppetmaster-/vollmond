@@ -4,54 +4,50 @@ use crate::{MainState, FONT_COLOR, TITLE_ZOOM};
 use keyframe::functions::{EaseIn, EaseOut};
 use keyframe::Keyframe;
 use macroquad::prelude::*;
-use std::future::Future;
 
 pub struct Story {
     camera: Camera2D,
     font: Font,
     show_text1: bool,
-    text1: String,
-    text2: String,
+    text1: Vec<String>,
+    text2: Vec<String>,
     timer: Timer,
     need_reset: bool,
     tween: Tween,
 }
 
 impl Story {
-    pub fn init() -> impl Future<Output = Story> {
-        async move {
-            let camera = Camera2D {
-                zoom: vec2(
-                    TITLE_ZOOM / screen_width() * 2.0,
-                    -TITLE_ZOOM / screen_height() * 2.0,
-                ),
-                target: vec2(0.0, 0.0),
-                ..Default::default()
-            };
-            let tween = Tween::from_keyframes(
-                vec![
-                    Keyframe::new(0.0, 0.0, EaseOut),
-                    Keyframe::new(8.0, 0.5, EaseOut),
-                    Keyframe::new(0.0, 1.0, EaseIn),
-                ],
-                0,
-                2,
-                true,
-            );
-            let font =
-                load_ttf_font_from_bytes(include_bytes!("../../assets/fonts/GothicPixels.ttf"));
-            let text1 = "It is almost full moon.\nThe night of your transformation\nis about to begin.\nThe only thing that can stop it\nis the Moonshot potion.";
-            let text2 = "Bring me a werewolf hair,\na piece of moonmilk,\nthe fruits of the moonseed\nand a moonflower.\nI can then brew\nthe moonshot for you.";
-            Story {
-                camera,
-                font,
-                show_text1: true,
-                text1: text1.to_string(),
-                text2: text2.to_string(),
-                timer: Timer::new_sec(2),
-                need_reset: true,
-                tween,
-            }
+    pub async fn init() -> Story {
+        let camera = Camera2D {
+            zoom: vec2(TITLE_ZOOM / screen_width() * 2.0, -TITLE_ZOOM / screen_height() * 2.0),
+            target: vec2(0.0, 0.0),
+            ..Default::default()
+        };
+        let tween = Tween::from_keyframes(
+            vec![
+                Keyframe::new(0.0, 0.0, EaseOut),
+                Keyframe::new(8.0, 0.5, EaseOut),
+                Keyframe::new(0.0, 1.0, EaseIn),
+            ],
+            0,
+            2,
+            true,
+        );
+        let font = load_ttf_font_from_bytes(include_bytes!("../../assets/fonts/GothicPixels.ttf"));
+        let t1 = "It is almost full moon.\nThe night of your transformation\nis about to begin.\nThe only thing that can stop it\nis the Moonshot potion.";
+        let t2 = "Bring me a werewolf hair,\na piece of moonmilk,\nthe fruits of the moonseed\nand a moonflower.\nI can then brew\nthe moonshot for you.";
+        let text1 = t1.to_string().split('\n').map(String::from).collect();
+        let text2 = t2.to_string().split('\n').map(String::from).collect();
+
+        Story {
+            camera,
+            font,
+            show_text1: true,
+            text1,
+            text2,
+            timer: Timer::new_sec(2),
+            need_reset: true,
+            tween,
         }
     }
 
@@ -72,7 +68,7 @@ impl Story {
             color: FONT_COLOR,
         };
         if self.show_text1 {
-            for (i, line) in self.text1.split("\n").enumerate() {
+            for (i, line) in self.text1.iter().enumerate() {
                 draw_text_ex(
                     line,
                     (screen_width() / 2.0) - 330.0,
@@ -81,7 +77,7 @@ impl Story {
                 );
             }
         } else {
-            for (i, line) in self.text2.split("\n").enumerate() {
+            for (i, line) in self.text2.iter().enumerate() {
                 draw_text_ex(
                     line,
                     (screen_width() / 2.0) - 290.0,
@@ -105,14 +101,12 @@ impl Story {
             );
         }
 
-        if get_last_key_pressed().is_some() {
-            if self.timer.finished() {
-                if self.show_text1 {
-                    self.show_text1 = false;
-                    self.timer.restart();
-                } else {
-                    return Some(MainState::GAME);
-                }
+        if get_last_key_pressed().is_some() && self.timer.finished() {
+            if self.show_text1 {
+                self.show_text1 = false;
+                self.timer.restart();
+            } else {
+                return Some(MainState::GAME);
             }
         }
         None
@@ -121,8 +115,5 @@ impl Story {
 
 fn update_camera(scene: &mut Story, new_target: Vec2) {
     scene.camera.target = new_target;
-    scene.camera.zoom = vec2(
-        TITLE_ZOOM / screen_width() * 2.0,
-        -TITLE_ZOOM / screen_height() * 2.0,
-    );
+    scene.camera.zoom = vec2(TITLE_ZOOM / screen_width() * 2.0, -TITLE_ZOOM / screen_height() * 2.0);
 }

@@ -3,11 +3,11 @@
 // run www server with basic-http-server -x
 
 mod assets;
-#[macro_use]
-mod utils;
+mod constants;
 mod entity;
 mod scene;
 mod tilemap;
+mod utils;
 
 use crate::scene::end::End;
 use crate::scene::game::Game;
@@ -95,14 +95,7 @@ fn show_fancy_fps(fps_buffer: &mut Vec<f32>) {
     fps_buffer.insert(0, time);
 
     for (x, time) in fps_buffer.iter().enumerate() {
-        draw_line(
-            (x + 10) as f32,
-            100.0,
-            (x + 10) as f32,
-            80.0 - time / 4.0,
-            1.0,
-            BLUE,
-        );
+        draw_line((x + 10) as f32, 100.0, (x + 10) as f32, 80.0 - time / 4.0, 1.0, BLUE);
     }
     draw_text(&format!("{}", time), 20.0, 110.0, 16.0, WHITE);
 

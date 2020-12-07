@@ -4,7 +4,6 @@ use keyframe::functions::{EaseIn, EaseInOut, EaseOut, Linear};
 use keyframe::Keyframe;
 use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
-use std::future::Future;
 
 pub struct Title {
     background: Texture2D,
@@ -15,66 +14,53 @@ pub struct Title {
 }
 
 impl Title {
-    pub fn init() -> impl Future<Output = Title> {
-        async move {
-            let tween1 = Tween::from_keyframes(
-                vec![
-                    Keyframe::new(0.0, 0.0, EaseOut),
-                    Keyframe::new(8.0, 0.5, EaseOut),
-                    Keyframe::new(0.0, 1.0, EaseInOut),
-                ],
-                0,
-                3,
-                true,
-            );
-            let tween2 = Tween::from_keyframes(
-                vec![
-                    Keyframe::new(0.0, 0.0, EaseOut),
-                    Keyframe::new(4.0, 0.5, EaseOut),
-                    Keyframe::new(0.0, 1.0, EaseIn),
-                ],
-                0,
-                2,
-                true,
-            );
-            let tween3 = Tween::from_keyframes(
-                vec![
-                    Keyframe::new(0.0, 0.0, Linear),
-                    Keyframe::new(6.283_185_5, 1.0, Linear),
-                ],
-                0,
-                10,
-                true,
-            );
-            let tween = vec![tween1, tween2, tween3];
+    pub async fn init() -> Title {
+        let tween1 = Tween::from_keyframes(
+            vec![
+                Keyframe::new(0.0, 0.0, EaseOut),
+                Keyframe::new(8.0, 0.5, EaseOut),
+                Keyframe::new(0.0, 1.0, EaseInOut),
+            ],
+            0,
+            3,
+            true,
+        );
+        let tween2 = Tween::from_keyframes(
+            vec![
+                Keyframe::new(0.0, 0.0, EaseOut),
+                Keyframe::new(4.0, 0.5, EaseOut),
+                Keyframe::new(0.0, 1.0, EaseIn),
+            ],
+            0,
+            2,
+            true,
+        );
+        let tween3 = Tween::from_keyframes(
+            vec![Keyframe::new(0.0, 0.0, Linear), Keyframe::new(6.283_185_5, 1.0, Linear)],
+            0,
+            10,
+            true,
+        );
+        let tween = vec![tween1, tween2, tween3];
 
-            let camera = Camera2D {
-                zoom: vec2(
-                    TITLE_ZOOM / screen_width() * 2.0,
-                    -TITLE_ZOOM / screen_height() * 2.0,
-                ),
-                target: vec2(0.0, 0.0),
-                ..Default::default()
-            };
-            let image =
-                Image::from_file_with_format(include_bytes!("../../assets/images/title.png"), None);
-            let background: Texture2D = load_texture_from_image(&image);
-            set_texture_filter(background, FilterMode::Nearest);
-            let image2 = Image::from_file_with_format(
-                include_bytes!("../../assets/images/vollmond.png"),
-                None,
-            );
-            let title: Texture2D = load_texture_from_image(&image2);
-            set_texture_filter(title, FilterMode::Nearest);
-            let font =
-                load_ttf_font_from_bytes(include_bytes!("../../assets/fonts/GothicPixels.ttf"));
-            Title {
-                background,
-                font,
-                camera,
-                title,
-                animations: tween,
-            }
+        let camera = Camera2D {
+            zoom: vec2(TITLE_ZOOM / screen_width() * 2.0, -TITLE_ZOOM / screen_height() * 2.0),
+            target: vec2(0.0, 0.0),
+            ..Default::default()
+        };
+        let image = Image::from_file_with_format(include_bytes!("../../assets/images/title.png"), None);
+        let background: Texture2D = load_texture_from_image(&image);
+        set_texture_filter(background, FilterMode::Nearest);
+        let image2 = Image::from_file_with_format(include_bytes!("../../assets/images/vollmond.png"), None);
+        let title: Texture2D = load_texture_from_image(&image2);
+        set_texture_filter(title, FilterMode::Nearest);
+        let font = load_ttf_font_from_bytes(include_bytes!("../../assets/fonts/GothicPixels.ttf"));
+        Title {
+            background,
+            font,
+            camera,
+            title,
+            animations: tween,
         }
     }
 
@@ -110,10 +96,7 @@ impl Title {
 
 fn update_camera(scene: &mut Title, new_target: Vec2) {
     scene.camera.target = new_target;
-    scene.camera.zoom = vec2(
-        TITLE_ZOOM / screen_width() * 2.0,
-        -TITLE_ZOOM / screen_height() * 2.0,
-    );
+    scene.camera.zoom = vec2(TITLE_ZOOM / screen_width() * 2.0, -TITLE_ZOOM / screen_height() * 2.0);
 }
 
 fn process_action() -> Option<MainState> {

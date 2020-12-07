@@ -14,11 +14,7 @@ impl<T> VecGrid<T> {
             data.push(None);
         }
 
-        VecGrid {
-            data,
-            width,
-            height,
-        }
+        VecGrid { data, width, height }
     }
 
     pub fn get(&self, x: usize, y: usize) -> Option<&T> {

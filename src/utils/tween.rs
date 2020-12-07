@@ -13,12 +13,7 @@ pub struct Tween {
 
 #[allow(dead_code)]
 impl Tween {
-    pub fn from_keyframes(
-        keyframes: Vec<Keyframe<f32>>,
-        start_at_sec: u64,
-        duration_sec: u64,
-        repeat: bool,
-    ) -> Tween {
+    pub fn from_keyframes(keyframes: Vec<Keyframe<f32>>, start_at_sec: u64, duration_sec: u64, repeat: bool) -> Tween {
         let sequence = AnimationSequence::from(keyframes);
         let mut timer = Timer::new_sec(duration_sec);
         timer.advance_by_sec(start_at_sec as f64);

@@ -1,3 +1,4 @@
+use crate::constants::FLOAT_CMP_ERROR_MARGIN;
 use crate::scene::game::GameState;
 use crate::tilemap::tile_animation::TileAnimation;
 use crate::tilemap::Tilemap;
@@ -27,8 +28,8 @@ const MOVE_FACTOR: f32 = 4.0;
 const MOVE_SPEED_CURVE: [f32; 8] = [1.0, 1.0, 2.0, 3.0, 5.0, 8.0, 13.0, 21.0];
 const BREAK_SPEED_CURVE: [f32; 8] = [21.0, 13.0, 8.0, 5.0, 3.0, 2.0, 1.0, 1.0];
 
-const PICKUP_SOUND_BYTES: &'static [u8] = include_bytes!("../../assets/sfx/pickup.wav");
-const JUMP_SOUND_BYTES: &'static [u8] = include_bytes!("../../assets/sfx/jump.wav");
+const PICKUP_SOUND_BYTES: &[u8] = include_bytes!("../../assets/sfx/pickup.wav");
+const JUMP_SOUND_BYTES: &[u8] = include_bytes!("../../assets/sfx/jump.wav");
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum State {
@@ -122,15 +123,9 @@ impl PlayerSide {
             }
         }
 
-        self.animations
-            .get_mut(&self.animation_state)
-            .unwrap()
-            .advance();
+        self.animations.get_mut(&self.animation_state).unwrap().advance();
 
-        let id_center = tilemap.get_id_at_position(
-            tilemap.get_layer_id("logic"),
-            self.position() + vec2(4.0, 4.0),
-        );
+        let id_center = tilemap.get_id_at_position(tilemap.get_layer_id("logic"), self.position() + vec2(4.0, 4.0));
 
         self.collide_color = SKYBLUE;
 
@@ -142,20 +137,11 @@ impl PlayerSide {
             //wait before moving
             if is_key_down(KeyCode::A) || is_key_down(KeyCode::Left) {
                 let distance = 4.0 * MOVE_SPEED_CURVE[self.moving_timer] * delta;
-                if can_walk_left(
-                    vec2(self.position.x() - distance, self.position.y()),
-                    tilemap,
-                ) {
+                if can_walk_left(vec2(self.position.x() - distance, self.position.y()), tilemap) {
                     if self.animation_state != AnimationState::RUNLEFT {
-                        self.animations
-                            .get_mut(&self.animation_state)
-                            .unwrap()
-                            .reset();
+                        self.animations.get_mut(&self.animation_state).unwrap().reset();
                         self.animation_state = AnimationState::RUNLEFT;
-                        self.animations
-                            .get_mut(&self.animation_state)
-                            .unwrap()
-                            .repeating = true;
+                        self.animations.get_mut(&self.animation_state).unwrap().repeating = true;
                     }
                     self.state = State::RUN;
                     self.direction = vec2(-1.0, 0.0);
@@ -171,20 +157,11 @@ impl PlayerSide {
                 }
             } else if is_key_down(KeyCode::D) || is_key_down(KeyCode::Right) {
                 let distance = MOVE_FACTOR * MOVE_SPEED_CURVE[self.moving_timer] * delta;
-                if can_walk_right(
-                    vec2(self.position.x() + distance, self.position.y()),
-                    tilemap,
-                ) {
+                if can_walk_right(vec2(self.position.x() + distance, self.position.y()), tilemap) {
                     if self.animation_state != AnimationState::RUNRIGHT {
-                        self.animations
-                            .get_mut(&self.animation_state)
-                            .unwrap()
-                            .reset();
+                        self.animations.get_mut(&self.animation_state).unwrap().reset();
                         self.animation_state = AnimationState::RUNRIGHT;
-                        self.animations
-                            .get_mut(&self.animation_state)
-                            .unwrap()
-                            .repeating = true;
+                        self.animations.get_mut(&self.animation_state).unwrap().repeating = true;
                     }
                     self.state = State::RUN;
                     self.direction = vec2(1.0, 0.0);
@@ -202,60 +179,29 @@ impl PlayerSide {
                 self.moving_timer = 0;
                 // sliding
                 if self.break_timer < BREAK_SPEED_CURVE.len() - 1 {
-                    let distance =
-                        (MOVE_FACTOR + 2.0) * BREAK_SPEED_CURVE[self.break_timer] * delta;
+                    let distance = (MOVE_FACTOR + 2.0) * BREAK_SPEED_CURVE[self.break_timer] * delta;
                     if self.direction.x() > 0.0 {
                         // right
-                        if can_walk_right(
-                            vec2(self.position.x() + distance, self.position.y()),
-                            tilemap,
-                        ) {
+                        if can_walk_right(vec2(self.position.x() + distance, self.position.y()), tilemap) {
                             new_x = self.position.x() + distance;
                         }
-                    } else {
-                        if can_walk_left(
-                            vec2(self.position.x() - distance, self.position.y()),
-                            tilemap,
-                        ) {
-                            new_x = self.position.x() - distance;
-                        }
+                    } else if can_walk_left(vec2(self.position.x() - distance, self.position.y()), tilemap) {
+                        new_x = self.position.x() - distance;
                     }
                     self.break_timer += 1;
                 }
                 match self.animation_state {
                     AnimationState::RUNLEFT => {
-                        self.animations
-                            .get_mut(&self.animation_state)
-                            .unwrap()
-                            .repeating = false;
-                        if self
-                            .animations
-                            .get_mut(&self.animation_state)
-                            .unwrap()
-                            .finish()
-                        {
-                            self.animations
-                                .get_mut(&self.animation_state)
-                                .unwrap()
-                                .reset();
+                        self.animations.get_mut(&self.animation_state).unwrap().repeating = false;
+                        if self.animations.get_mut(&self.animation_state).unwrap().finish() {
+                            self.animations.get_mut(&self.animation_state).unwrap().reset();
                             self.animation_state = AnimationState::STANDLEFT;
                         }
                     }
                     AnimationState::RUNRIGHT => {
-                        self.animations
-                            .get_mut(&self.animation_state)
-                            .unwrap()
-                            .repeating = false;
-                        if self
-                            .animations
-                            .get_mut(&self.animation_state)
-                            .unwrap()
-                            .finish()
-                        {
-                            self.animations
-                                .get_mut(&self.animation_state)
-                                .unwrap()
-                                .reset();
+                        self.animations.get_mut(&self.animation_state).unwrap().repeating = false;
+                        if self.animations.get_mut(&self.animation_state).unwrap().finish() {
+                            self.animations.get_mut(&self.animation_state).unwrap().reset();
                             self.animation_state = AnimationState::STANDRIGHT;
                         }
                     }
@@ -273,18 +219,15 @@ impl PlayerSide {
                     }
                     self.jump_up_timer += 1;
                     //todo check if player can jump up
-                    new_y = self.position.y() - JUMP_UP_FACTOR
-                        + JUMP_UP_CURVE[self.jump_up_timer] * delta;
-                    new_x = new_x + self.direction.x() * 0.2;
+                    new_y = self.position.y() - JUMP_UP_FACTOR + JUMP_UP_CURVE[self.jump_up_timer] * delta;
+                    new_x += self.direction.x() * 0.2;
                 } else {
                     self.jump_state = JumpState::AIR;
                 }
             }
 
             //stop jumping
-            if (!is_key_down(KeyCode::Space) && !is_key_down(KeyCode::Up))
-                && self.jump_state == JumpState::JUMP
-            {
+            if (!is_key_down(KeyCode::Space) && !is_key_down(KeyCode::Up)) && self.jump_state == JumpState::JUMP {
                 self.jump_state = JumpState::AIR;
                 self.jump_up_timer = 0;
             }
@@ -306,10 +249,8 @@ impl PlayerSide {
                     if self.jump_down_timer < JUMP_DOWN_CURVE.len() - 1 {
                         self.jump_down_timer += 1;
                     }
-                    new_y = self.position.y()
-                        + JUMP_DOWN_FACTOR
-                        + JUMP_DOWN_CURVE[self.jump_down_timer] * delta;
-                    new_x = new_x + self.direction.x() * 0.2;
+                    new_y = self.position.y() + JUMP_DOWN_FACTOR + JUMP_DOWN_CURVE[self.jump_down_timer] * delta;
+                    new_x += self.direction.x() * 0.2;
                     self.jump_state = JumpState::DOWN;
                 } else {
                     self.jump_down_timer = 0;
@@ -320,12 +261,9 @@ impl PlayerSide {
             }
 
             // fix for player inside wall //todo fixme
-            if self.position.x() == new_x && self.position.y() == new_y {
+            if self.position.abs_diff_eq(vec2(new_x, new_y), FLOAT_CMP_ERROR_MARGIN) {
                 if self.position.y() % 8.0 > 0.0 {
-                    self.position = vec2(
-                        self.position.x(),
-                        self.position.y() - self.position.y() % 8.0,
-                    );
+                    self.position = vec2(self.position.x(), self.position.y() - self.position.y() % 8.0);
                 }
                 self.direction = vec2(0.0, 0.0);
                 self.position.set_x(new_x);
@@ -346,11 +284,7 @@ impl PlayerSide {
                         if self.last_item_id != Some(id) {
                             self.last_item_id = Some(id);
                             self.bonus += 1;
-                            tilemap.replace_all_tileid(
-                                tilemap.get_layer_id("logic"),
-                                ITEM_ZELDA,
-                                None,
-                            );
+                            tilemap.replace_all_tileid(tilemap.get_layer_id("logic"), ITEM_ZELDA, None);
                             self.mixer.play(self.pickup_sound.clone());
                         }
                         None
@@ -388,12 +322,7 @@ impl PlayerSide {
             },
         );
         if DEBUG {
-            draw_circle(
-                self.position.x().round(),
-                self.position.y().round(),
-                0.5,
-                RED,
-            );
+            draw_circle(self.position.x().round(), self.position.y().round(), 0.5, RED);
             draw_rectangle_lines(
                 self.position().x(),
                 self.position().y(),
@@ -444,113 +373,67 @@ impl PlayerSide {
 }
 
 fn can_walk_left(new_position: Vec2, tilemap: &Tilemap) -> bool {
-    let id = tilemap.get_id_at_position(
-        tilemap.get_layer_id("collision"),
-        new_position + vec2(0.0, 1.0),
-    );
-    let id2 = tilemap.get_id_at_position(
-        tilemap.get_layer_id("collision"),
-        new_position + vec2(0.0, 15.0),
-    );
-    match id {
-        Some(i) => {
-            if i == 520 {
-                return false;
-            }
+    let id = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position + vec2(0.0, 1.0));
+    let id2 = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position + vec2(0.0, 15.0));
+    if let Some(i) = id {
+        if i == 520 {
+            return false;
         }
-        _ => {}
     }
-    match id2 {
-        Some(i) => {
-            if i == 520 {
-                return false;
-            }
+    if let Some(i) = id2 {
+        if i == 520 {
+            return false;
         }
-        _ => {}
     }
     true
 }
 
 fn can_walk_right(new_position: Vec2, tilemap: &Tilemap) -> bool {
-    let id = tilemap.get_id_at_position(
-        tilemap.get_layer_id("collision"),
-        new_position + vec2(8.0, 0.0),
-    );
-    let id2 = tilemap.get_id_at_position(
-        tilemap.get_layer_id("collision"),
-        new_position + vec2(8.0, 8.0),
-    );
-    match id {
-        Some(i) => {
-            if i == 520 {
-                return false;
-            }
+    let id = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position + vec2(8.0, 0.0));
+    let id2 = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position + vec2(8.0, 8.0));
+    if let Some(i) = id {
+        if i == 520 {
+            return false;
         }
-        _ => {}
     }
-    match id2 {
-        Some(i) => {
-            if i == 520 {
-                return false;
-            }
+
+    if let Some(i) = id2 {
+        if i == 520 {
+            return false;
         }
-        _ => {}
     }
     true
 }
 
 fn can_jump_up(new_position: Vec2, tilemap: &Tilemap) -> bool {
-    let id = tilemap.get_id_at_position(
-        tilemap.get_layer_id("collision"),
-        new_position + vec2(0.0, 0.0),
-    );
-    let id2 = tilemap.get_id_at_position(
-        tilemap.get_layer_id("collision"),
-        new_position + vec2(8.0, 0.0),
-    );
-    match id {
-        Some(i) => {
-            if i == 520 {
-                return false;
-            }
+    let id = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position + vec2(0.0, 0.0));
+    let id2 = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position + vec2(8.0, 0.0));
+    if let Some(i) = id {
+        if i == 520 {
+            return false;
         }
-        _ => {}
     }
-    match id2 {
-        Some(i) => {
-            if i == 520 {
-                return false;
-            }
+    if let Some(i) = id2 {
+        if i == 520 {
+            return false;
         }
-        _ => {}
     }
     true
 }
 
 fn can_walk_down(new_position: Vec2, tilemap: &Tilemap) -> bool {
-    let id = tilemap.get_id_at_position(
-        tilemap.get_layer_id("collision"),
-        new_position + vec2(0.0, 16.0),
-    );
-    let id2 = tilemap.get_id_at_position(
-        tilemap.get_layer_id("collision"),
-        new_position + vec2(8.0, 16.0),
-    );
-    match id {
-        Some(i) => {
-            if i == 520 {
-                return false;
-            }
+    let id = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position + vec2(0.0, 16.0));
+    let id2 = tilemap.get_id_at_position(tilemap.get_layer_id("collision"), new_position + vec2(8.0, 16.0));
+    if let Some(i) = id {
+        if i == 520 {
+            return false;
         }
-        _ => {}
     }
-    match id2 {
-        Some(i) => {
-            if i == 520 {
-                return false;
-            }
+
+    if let Some(i) = id2 {
+        if i == 520 {
+            return false;
         }
-        _ => {}
     }
     true
 }
@@ -586,8 +469,7 @@ fn get_animations() -> HashMap<AnimationState, TileAnimation> {
 }
 
 fn get_player_spritesheet() -> Texture2D {
-    let image =
-        Image::from_file_with_format(include_bytes!("../../assets/images/player.png"), None);
+    let image = Image::from_file_with_format(include_bytes!("../../assets/images/player.png"), None);
     let spritesheet: Texture2D = load_texture_from_image(&image);
     set_texture_filter(spritesheet, FilterMode::Nearest);
     spritesheet

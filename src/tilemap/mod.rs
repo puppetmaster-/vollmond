@@ -9,13 +9,7 @@ use std::collections::HashMap;
 
 #[allow(dead_code)]
 impl Tilemap {
-    pub fn new(
-        clip: Rect,
-        tile_width: i32,
-        tile_height: i32,
-        width: usize,
-        height: usize,
-    ) -> Tilemap {
+    pub fn new(clip: Rect, tile_width: i32, tile_height: i32, width: usize, height: usize) -> Tilemap {
         Tilemap {
             width,
             height,
@@ -234,17 +228,12 @@ impl Tilemap {
     }
     pub fn draw(&self, texture: Texture2D, position: Vec2, layer_to_draw: Option<usize>) {
         for (i, layer) in self.layers.iter().enumerate() {
-            if layer.visibility && layer_to_draw.is_none()
-                || layer_to_draw.is_some() && i == layer_to_draw.unwrap()
-            {
+            if layer.visibility && layer_to_draw.is_none() || layer_to_draw.is_some() && i == layer_to_draw.unwrap() {
                 for tile in layer.tiles.get_data().iter().filter(|t| t.is_some()) {
                     match tile {
                         None => (),
                         Some(tile) => {
-                            let tmp_pos = Vec2::new(
-                                position.x() + tile.position_x,
-                                position.y() + tile.position_y,
-                            );
+                            let tmp_pos = Vec2::new(position.x() + tile.position_x, position.y() + tile.position_y);
                             draw_texture_ex(
                                 texture,
                                 tmp_pos.x(),
@@ -258,14 +247,7 @@ impl Tilemap {
                                 },
                             );
                             if DEBUG {
-                                draw_rectangle_lines(
-                                    tmp_pos.x(),
-                                    tmp_pos.y(),
-                                    8.0,
-                                    8.0,
-                                    0.1,
-                                    GREEN,
-                                );
+                                draw_rectangle_lines(tmp_pos.x(), tmp_pos.y(), 8.0, 8.0, 0.1, GREEN);
                                 //draw_circle(tmp_pos.x(), tmp_pos.y(),0.5, RED); //low fps
                             }
                         }
@@ -340,20 +322,12 @@ fn transform_pyxeltilemap(clip: Rect, pyxeltilemap: PyxelTilemap) -> Tilemap {
             pyxeltilemap.tileswide as usize,
             pyxeltilemap.tileshigh as usize,
         ),
-        tile_rectangles: get_tile_rectangles(
-            clip,
-            pyxeltilemap.tile_width,
-            pyxeltilemap.tile_height,
-        ),
+        tile_rectangles: get_tile_rectangles(clip, pyxeltilemap.tile_width, pyxeltilemap.tile_height),
         layer_to_draw: DEFAULT_LAYER_TO_DRAW,
     }
 }
 
-fn transform_pyxellayer(
-    pyxellayers: &[pyxeledit::Layers],
-    width: usize,
-    height: usize,
-) -> Vec<Layer> {
+fn transform_pyxellayer(pyxellayers: &[pyxeledit::Layers], width: usize, height: usize) -> Vec<Layer> {
     let mut layers: Vec<Layer> = Vec::with_capacity(pyxellayers.len());
     for pyxellayer in pyxellayers.iter().rev() {
         let l = Layer {
@@ -366,11 +340,7 @@ fn transform_pyxellayer(
     layers
 }
 
-fn transform_pyxeltile(
-    pyxeltiles: &[pyxeledit::Tile],
-    width: usize,
-    height: usize,
-) -> VecGrid<Tile> {
+fn transform_pyxeltile(pyxeltiles: &[pyxeledit::Tile], width: usize, height: usize) -> VecGrid<Tile> {
     let mut vecgrid: VecGrid<Tile> = VecGrid::new(width, height);
     for t in pyxeltiles.iter() {
         let tile = Tile {

@@ -1,34 +1,24 @@
 use crate::{MainState, FONT_COLOR, TITLE_ZOOM};
 use macroquad::prelude::*;
-use std::future::Future;
 
 pub struct End {
     camera: Camera2D,
     font: Font,
-    text1: String,
+    text1: Vec<String>,
 }
 
 impl End {
-    pub fn init() -> impl Future<Output = End> {
-        async move {
-            let camera = Camera2D {
-                zoom: vec2(
-                    TITLE_ZOOM / screen_width() * 2.0,
-                    -TITLE_ZOOM / screen_height() * 2.0,
-                ),
-                target: vec2(0.0, 0.0),
-                ..Default::default()
-            };
-            // todo write end text
-            let font =
-                load_ttf_font_from_bytes(include_bytes!("../../assets/fonts/GothicPixels.ttf"));
-            let text1 = "You managed to bring\nthe four ingredients in time.\nHere you have the potion.\n\nThanks for playing my game.\n\n";
-            End {
-                camera,
-                font,
-                text1: text1.to_string(),
-            }
-        }
+    pub async fn init() -> End {
+        let camera = Camera2D {
+            zoom: vec2(TITLE_ZOOM / screen_width() * 2.0, -TITLE_ZOOM / screen_height() * 2.0),
+            target: vec2(0.0, 0.0),
+            ..Default::default()
+        };
+        // todo write end text
+        let font = load_ttf_font_from_bytes(include_bytes!("../../assets/fonts/GothicPixels.ttf"));
+        let t1 = "You managed to bring\nthe four ingredients in time.\nHere you have the potion.\n\nThanks for playing my game.\n\n";
+        let text1 = t1.to_string().split('\n').map(String::from).collect();
+        End { camera, font, text1 }
     }
 
     pub fn run(&mut self, secrets: u8) -> Option<MainState> {
@@ -42,7 +32,7 @@ impl End {
             font_scale: 0.5,
             color: FONT_COLOR,
         };
-        for (i, line) in self.text1.split("\n").enumerate() {
+        for (i, line) in self.text1.iter().enumerate() {
             draw_text_ex(
                 line,
                 (screen_width() / 2.0) - 350.0,
@@ -66,8 +56,5 @@ impl End {
 
 fn update_camera(scene: &mut End, new_target: Vec2) {
     scene.camera.target = new_target;
-    scene.camera.zoom = vec2(
-        TITLE_ZOOM / screen_width() * 2.0,
-        -TITLE_ZOOM / screen_height() * 2.0,
-    );
+    scene.camera.zoom = vec2(TITLE_ZOOM / screen_width() * 2.0, -TITLE_ZOOM / screen_height() * 2.0);
 }

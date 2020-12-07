@@ -7,7 +7,6 @@ use keyframe::functions::{EaseIn, EaseOut};
 use keyframe::Keyframe;
 use macroquad::prelude::*;
 use std::collections::HashMap;
-use std::future::Future;
 
 const OFFSET_CAMERA: f32 = 15.0;
 
@@ -54,66 +53,55 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn init() -> impl Future<Output = Game> {
-        async move {
-            let tween = Tween::from_keyframes(
-                vec![
-                    Keyframe::new(0.0, 0.0, EaseOut),
-                    Keyframe::new(4.0, 0.5, EaseOut),
-                    Keyframe::new(0.0, 1.0, EaseIn),
-                ],
-                0,
-                2,
-                true,
-            );
-            let map_texture = get_map_texture();
-            let side_texture = get_side_texture();
-            let map_tilemap = get_map_tilemap();
-            let player_map = PlayerMap::new(&map_tilemap);
+    pub async fn init() -> Game {
+        let tween = Tween::from_keyframes(
+            vec![
+                Keyframe::new(0.0, 0.0, EaseOut),
+                Keyframe::new(4.0, 0.5, EaseOut),
+                Keyframe::new(0.0, 1.0, EaseIn),
+            ],
+            0,
+            2,
+            true,
+        );
+        let map_texture = get_map_texture();
+        let side_texture = get_side_texture();
+        let map_tilemap = get_map_tilemap();
+        let player_map = PlayerMap::new(&map_tilemap);
 
-            let player_side = PlayerSide::new();
+        let player_side = PlayerSide::new();
 
-            let camera_map = Camera2D {
-                zoom: vec2(
-                    MAP_ZOOM / screen_width() * 2.0,
-                    -MAP_ZOOM / screen_height() * 2.0,
-                ),
-                target: player_map.position(),
-                ..Default::default()
-            };
-            let camera_side = Camera2D {
-                zoom: vec2(
-                    SIDE_ZOOM / screen_width() * 2.0,
-                    -SIDE_ZOOM / screen_height() * 2.0,
-                ),
-                target: player_side.position() - vec2(0.0, OFFSET_CAMERA),
-                ..Default::default()
-            };
-            let camera_sky = Camera2D {
-                zoom: vec2(
-                    SIDE_ZOOM / screen_width() * 2.0,
-                    -SIDE_ZOOM / screen_height() * 2.0,
-                ),
-                target: player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0),
-                ..Default::default()
-            };
+        let camera_map = Camera2D {
+            zoom: vec2(MAP_ZOOM / screen_width() * 2.0, -MAP_ZOOM / screen_height() * 2.0),
+            target: player_map.position(),
+            ..Default::default()
+        };
+        let camera_side = Camera2D {
+            zoom: vec2(SIDE_ZOOM / screen_width() * 2.0, -SIDE_ZOOM / screen_height() * 2.0),
+            target: player_side.position() - vec2(0.0, OFFSET_CAMERA),
+            ..Default::default()
+        };
+        let camera_sky = Camera2D {
+            zoom: vec2(SIDE_ZOOM / screen_width() * 2.0, -SIDE_ZOOM / screen_height() * 2.0),
+            target: player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0),
+            ..Default::default()
+        };
 
-            Game {
-                map_texture,
-                side_texture,
-                player_map,
-                player_side,
-                map_tilemap,
-                tilemaps: get_tilemaps(),
-                current_tilemap_key: GameState::MapCemetery,
-                camera_map,
-                camera_side,
-                camera_sky,
-                game_state: GameState::MAP,
-                init_sidemap: true,
-                item_tween: tween,
-                draw_sky: true,
-            }
+        Game {
+            map_texture,
+            side_texture,
+            player_map,
+            player_side,
+            map_tilemap,
+            tilemaps: get_tilemaps(),
+            current_tilemap_key: GameState::MapCemetery,
+            camera_map,
+            camera_side,
+            camera_sky,
+            game_state: GameState::MAP,
+            init_sidemap: true,
+            item_tween: tween,
+            draw_sky: true,
         }
     }
 
@@ -138,11 +126,13 @@ impl Game {
                         self.game_state = gs;
                     }
                 }
+                if let Some(id) = self.player_map.last_id {
+                    //todo uncover secrets
+                }
                 update_map_camera(self, self.player_map.position());
                 set_camera(self.camera_map);
 
-                self.map_tilemap
-                    .draw(self.map_texture, vec2(0.0, 0.0), None);
+                self.map_tilemap.draw(self.map_texture, vec2(0.0, 0.0), None);
                 self.player_map.draw(self.map_texture);
 
                 set_default_camera();
@@ -167,8 +157,7 @@ impl Game {
                         SPAWN_ID,
                     )[0];
                 self.camera_side.target = self.player_side.position() - vec2(4.0, OFFSET_CAMERA);
-                self.camera_sky.target =
-                    self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
+                self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = true;
                 None
@@ -187,8 +176,7 @@ impl Game {
                         SPAWN_ID,
                     )[0];
                 self.camera_side.target = self.player_side.position() - vec2(4.0, OFFSET_CAMERA);
-                self.camera_sky.target =
-                    self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
+                self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = true;
                 None
@@ -207,8 +195,7 @@ impl Game {
                         SPAWN_ID,
                     )[0];
                 self.camera_side.target = self.player_side.position() - vec2(4.0, OFFSET_CAMERA);
-                self.camera_sky.target =
-                    self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
+                self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = true;
                 None
@@ -227,8 +214,7 @@ impl Game {
                         SPAWN_ID,
                     )[0];
                 self.camera_side.target = self.player_side.position() - vec2(4.0, OFFSET_CAMERA);
-                self.camera_sky.target =
-                    self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
+                self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = true;
                 None
@@ -247,8 +233,7 @@ impl Game {
                         SPAWN_ID,
                     )[0];
                 self.camera_side.target = self.player_side.position() - vec2(4.0, OFFSET_CAMERA);
-                self.camera_sky.target =
-                    self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 1000.0);
+                self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 1000.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = false;
                 self.map_tilemap.set_tileid_at(
@@ -272,8 +257,7 @@ impl Game {
                         SPAWN_ID,
                     )[0];
                 self.camera_side.target = self.player_side.position() - vec2(4.0, OFFSET_CAMERA);
-                self.camera_sky.target =
-                    self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
+                self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = false;
                 self.map_tilemap.set_tileid_at(
@@ -297,8 +281,7 @@ impl Game {
                         SPAWN_ID,
                     )[0];
                 self.camera_side.target = self.player_side.position() - vec2(4.0, OFFSET_CAMERA);
-                self.camera_sky.target =
-                    self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
+                self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = true;
                 None
@@ -360,7 +343,7 @@ impl Game {
                                 .get_layer_id("logic"),
                             id,
                         );
-                    if item_pos.len() > 0 {
+                    if !item_pos.is_empty() {
                         draw_texture_ex(
                             self.side_texture,
                             item_pos[0].x(),
@@ -398,26 +381,17 @@ impl Game {
 
 fn update_map_camera(game: &mut Game, new_target: Vec2) {
     game.camera_map.target = new_target;
-    game.camera_map.zoom = vec2(
-        MAP_ZOOM / screen_width() * 2.0,
-        -MAP_ZOOM / screen_height() * 2.0,
-    );
+    game.camera_map.zoom = vec2(MAP_ZOOM / screen_width() * 2.0, -MAP_ZOOM / screen_height() * 2.0);
 }
 
 fn update_side_camera(game: &mut Game, new_target: Vec2) {
     if new_target.x() > 290.0 && new_target.x() < 670.0 {
         game.camera_side.target.set_x(new_target.x());
     }
-    game.camera_side.zoom = vec2(
-        SIDE_ZOOM / screen_width() * 2.0,
-        -SIDE_ZOOM / screen_height() * 2.0,
-    );
+    game.camera_side.zoom = vec2(SIDE_ZOOM / screen_width() * 2.0, -SIDE_ZOOM / screen_height() * 2.0);
 }
 fn update_sky_camera(game: &mut Game) {
-    game.camera_sky.zoom = vec2(
-        SIDE_ZOOM / screen_width() * 2.0,
-        -SIDE_ZOOM / screen_height() * 2.0,
-    );
+    game.camera_sky.zoom = vec2(SIDE_ZOOM / screen_width() * 2.0, -SIDE_ZOOM / screen_height() * 2.0);
 }
 
 fn get_map_texture() -> Texture2D {
