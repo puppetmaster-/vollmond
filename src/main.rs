@@ -2,7 +2,6 @@
 // https://github.com/not-fl3/miniquad
 // run www server with basic-http-server -x
 
-mod assets;
 mod constants;
 mod entity;
 mod scene;
