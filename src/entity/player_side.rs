@@ -34,6 +34,7 @@ const JUMP_SOUND_BYTES: &[u8] = include_bytes!("../../assets/sfx/jump.wav");
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum State {
     FLOOR,
+    SLIDE,
     IDLE,
     RUN,
 }
@@ -149,7 +150,6 @@ impl PlayerSide {
                     if self.moving_timer < MOVE_SPEED_CURVE.len() - 1 {
                         self.moving_timer += 1;
                     }
-                    self.break_timer = 0;
                 } else {
                     self.direction = vec2(1.0, 0.0);
                     self.break_timer = BREAK_SPEED_CURVE.len() - 3;
@@ -169,7 +169,6 @@ impl PlayerSide {
                     if self.moving_timer < MOVE_SPEED_CURVE.len() - 1 {
                         self.moving_timer += 1;
                     }
-                    self.break_timer = 0;
                 } else {
                     self.direction = vec2(-1.0, 0.0);
                     self.break_timer = BREAK_SPEED_CURVE.len() - 3;
@@ -177,19 +176,28 @@ impl PlayerSide {
                 }
             } else {
                 self.moving_timer = 0;
-                // sliding
-                if self.break_timer < BREAK_SPEED_CURVE.len() - 1 {
-                    let distance = (MOVE_FACTOR + 2.0) * BREAK_SPEED_CURVE[self.break_timer] * delta;
-                    if self.direction.x() > 0.0 {
-                        // right
-                        if can_walk_right(vec2(self.position.x() + distance, self.position.y()), tilemap) {
-                            new_x = self.position.x() + distance;
-                        }
-                    } else if can_walk_left(vec2(self.position.x() - distance, self.position.y()), tilemap) {
-                        new_x = self.position.x() - distance;
+                if self.jump_state == JumpState::NOT {
+                    if self.state == State::RUN {
+                        self.break_timer = 0;
+                        self.state = State::SLIDE
                     }
-                    self.break_timer += 1;
+                    if self.break_timer < BREAK_SPEED_CURVE.len() - 1 {
+                        let distance = (MOVE_FACTOR + 2.0) * BREAK_SPEED_CURVE[self.break_timer] * delta;
+                        if self.direction.x() > 0.0 {
+                            // right
+                            if can_walk_right(vec2(self.position.x() + distance, self.position.y()), tilemap) {
+                                new_x = self.position.x() + distance;
+                            }
+                        } else if can_walk_left(vec2(self.position.x() - distance, self.position.y()), tilemap) {
+                            new_x = self.position.x() - distance;
+                        }
+                        self.break_timer += 1;
+                    } else {
+                        self.state = State::IDLE;
+                        self.direction = vec2(0.0, 0.0);
+                    }
                 }
+
                 match self.animation_state {
                     AnimationState::RUNLEFT => {
                         self.animations.get_mut(&self.animation_state).unwrap().repeating = false;
@@ -209,10 +217,8 @@ impl PlayerSide {
                 }
             };
             // jump
-            if (is_key_down(KeyCode::Space) || is_key_down(KeyCode::Up))
-                && (self.jump_state == JumpState::JUMP || self.jump_state == JumpState::NOT)
-            {
-                if self.jump_up_timer < JUMP_UP_CURVE.len() - 1 {
+            if (is_key_down(KeyCode::Space) || is_key_down(KeyCode::Up)) && (self.jump_state == JumpState::JUMP || self.jump_state == JumpState::NOT) {
+                if self.jump_up_timer < JUMP_UP_CURVE.len() - 1 && can_jump_up(vec2(self.position.x(), self.position.y()), tilemap) {
                     if self.jump_state == JumpState::NOT {
                         self.mixer.play(self.jump_sound.clone());
                         self.jump_state = JumpState::JUMP;
@@ -233,10 +239,7 @@ impl PlayerSide {
             }
 
             if self.jump_state == JumpState::AIR {
-                // todo is it correct place to check can_jump_up?
-                if self.air_timer > JUMP_UP_CURVE.len() - 1
-                    || !can_jump_up(vec2(self.position.x(), self.position.y()), tilemap)
-                {
+                if self.air_timer > JUMP_UP_CURVE.len() - 1 {
                     self.air_timer = 0;
                     self.jump_state = JumpState::DOWN;
                 } else {
@@ -323,51 +326,14 @@ impl PlayerSide {
         );
         if DEBUG {
             draw_circle(self.position.x().round(), self.position.y().round(), 0.5, RED);
-            draw_rectangle_lines(
-                self.position().x(),
-                self.position().y(),
-                16.0,
-                16.0,
-                0.1,
-                self.collide_color,
-            );
+            draw_rectangle_lines(self.position().x(), self.position().y(), 16.0, 16.0, 0.1, self.collide_color);
             draw_text(&format!("{:?}", &self.state), 400.0, 5.0, 14.0, WHITE);
-            draw_circle(
-                (self.position + vec2(0.0, 1.0)).x(),
-                (self.position + vec2(0.0, 1.0)).y(),
-                0.5,
-                BLUE,
-            );
-            draw_circle(
-                (self.position + vec2(0.0, 15.0)).x(),
-                (self.position + vec2(0.0, 15.0)).y(),
-                0.5,
-                BLUE,
-            );
-            draw_circle(
-                (self.position + vec2(8.0, 0.0)).x(),
-                (self.position + vec2(8.0, 0.0)).y(),
-                0.5,
-                GREEN,
-            );
-            draw_circle(
-                (self.position + vec2(8.0, 8.0)).x(),
-                (self.position + vec2(8.0, 8.0)).y(),
-                0.5,
-                GREEN,
-            );
-            draw_circle(
-                (self.position + vec2(0.0, 16.0)).x(),
-                (self.position + vec2(0.0, 16.0)).y(),
-                0.5,
-                GREEN,
-            );
-            draw_circle(
-                (self.position + vec2(8.0, 16.0)).x(),
-                (self.position + vec2(8.0, 16.0)).y(),
-                0.5,
-                GREEN,
-            );
+            draw_circle((self.position + vec2(0.0, 1.0)).x(), (self.position + vec2(0.0, 1.0)).y(), 0.5, BLUE); //left up
+            draw_circle((self.position + vec2(0.0, 15.0)).x(), (self.position + vec2(0.0, 15.0)).y(), 0.5, BLUE); //left down)
+            draw_circle((self.position + vec2(7.0, 0.0)).x(), (self.position + vec2(7.0, 0.0)).y(), 0.5, LIME); //
+            draw_circle((self.position + vec2(7.0, 8.0)).x(), (self.position + vec2(8.0, 8.0)).y(), 0.5, LIME);
+            draw_circle((self.position + vec2(0.0, 16.0)).x(), (self.position + vec2(0.0, 16.0)).y(), 0.5, GREEN);
+            draw_circle((self.position + vec2(8.0, 16.0)).x(), (self.position + vec2(8.0, 16.0)).y(), 0.5, GREEN);
         }
     }
 }
@@ -443,28 +409,14 @@ fn get_animations() -> HashMap<AnimationState, TileAnimation> {
     let mut hashmap = HashMap::new();
     hashmap.insert(
         AnimationState::RUNRIGHT,
-        TileAnimation::new(
-            &player_tilemap,
-            &[0, 1, 2, 3, 4, 5, 6, 7],
-            vec![Duration::from_millis(80)],
-        ),
+        TileAnimation::new(&player_tilemap, &[0, 1, 2, 3, 4, 5, 6, 7], vec![Duration::from_millis(80)]),
     );
     hashmap.insert(
         AnimationState::RUNLEFT,
-        TileAnimation::new(
-            &player_tilemap,
-            &[10, 11, 12, 13, 14, 15, 16, 17],
-            vec![Duration::from_millis(80)],
-        ),
+        TileAnimation::new(&player_tilemap, &[10, 11, 12, 13, 14, 15, 16, 17], vec![Duration::from_millis(80)]),
     );
-    hashmap.insert(
-        AnimationState::STANDRIGHT,
-        TileAnimation::new(&player_tilemap, &[0, 20], vec![Duration::from_millis(500)]),
-    );
-    hashmap.insert(
-        AnimationState::STANDLEFT,
-        TileAnimation::new(&player_tilemap, &[10, 30], vec![Duration::from_millis(500)]),
-    );
+    hashmap.insert(AnimationState::STANDRIGHT, TileAnimation::new(&player_tilemap, &[0, 20], vec![Duration::from_millis(500)]));
+    hashmap.insert(AnimationState::STANDLEFT, TileAnimation::new(&player_tilemap, &[10, 30], vec![Duration::from_millis(500)]));
     hashmap
 }
 

@@ -1,10 +1,15 @@
 use crate::{MainState, FONT_COLOR, TITLE_ZOOM};
 use macroquad::prelude::*;
+use quad_snd::decoder;
+use quad_snd::mixer::{Sound, SoundMixer, Volume};
+
+const MUSIC_BYTES: &[u8] = include_bytes!("../../assets/music/end.ogg");
 
 pub struct End {
     camera: Camera2D,
     font: Font,
     text1: Vec<String>,
+    start: bool,
 }
 
 impl End {
@@ -18,13 +23,23 @@ impl End {
         let font = load_ttf_font_from_bytes(include_bytes!("../../assets/fonts/GothicPixels.ttf"));
         let t1 = "You managed to bring\nthe four ingredients in time.\nHere you have the potion.\n\nThanks for playing my game.\n\n";
         let text1 = t1.to_string().split('\n').map(String::from).collect();
-        End { camera, font, text1 }
+        End { 
+            camera, 
+            font, 
+            text1, 
+            start: true 
+        }
     }
 
     pub fn run(&mut self, secrets: u8) -> Option<MainState> {
+        if self.start {
+            let mut mixer = SoundMixer::new();
+            let id = mixer.play(decoder::read_ogg(MUSIC_BYTES).unwrap());
+            mixer.set_volume(id, Volume(0.6));
+            self.start = false;
+        }
         update_camera(self, vec2(0.0, 0.0));
         set_camera(self.camera);
-        //draw_texture_ex(self.texture1, 0.0, 0.0, WHITE, Default::default());
         set_default_camera();
         let tp = TextParams {
             font: self.font,

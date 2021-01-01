@@ -4,6 +4,10 @@ use keyframe::functions::{EaseIn, EaseInOut, EaseOut, Linear};
 use keyframe::Keyframe;
 use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
+use quad_snd::decoder;
+use quad_snd::mixer::{Sound, SoundMixer, Volume};
+
+const MUSIC_BYTES: &[u8] = include_bytes!("../../assets/music/start.ogg");
 
 pub struct Title {
     background: Texture2D,
@@ -11,6 +15,7 @@ pub struct Title {
     font: Font,
     camera: Camera2D,
     animations: Vec<Tween>,
+    start: bool,
 }
 
 impl Title {
@@ -61,10 +66,18 @@ impl Title {
             camera,
             title,
             animations: tween,
+            start: false
         }
     }
 
     pub fn run(&mut self) -> Option<MainState> {
+        #[cfg(not(target_arch = "wasm32"))]
+        if self.start {
+            let mut mixer = SoundMixer::new();
+            let id = mixer.play(decoder::read_ogg(MUSIC_BYTES).unwrap());
+            mixer.set_volume(id, Volume(0.6));
+            self.start = false;
+        }
         self.animations[0].update();
         self.animations[1].update();
         self.animations[2].update();
@@ -90,7 +103,7 @@ impl Title {
                 color: FONT_COLOR,
             },
         );
-        process_action()
+        process_action(self)
     }
 }
 
@@ -99,7 +112,14 @@ fn update_camera(scene: &mut Title, new_target: Vec2) {
     scene.camera.zoom = vec2(TITLE_ZOOM / screen_width() * 2.0, -TITLE_ZOOM / screen_height() * 2.0);
 }
 
-fn process_action() -> Option<MainState> {
+fn process_action(title: &mut Title) -> Option<MainState> {
+    #[cfg(target_arch = "wasm32")]
+    if is_mouse_button_released(MouseButton::Left) && title.start {
+        let mut mixer = SoundMixer::new();
+        let id = mixer.play(decoder::read_ogg(MUSIC_BYTES).unwrap());
+        mixer.set_volume(id, Volume(0.6));
+        title.start = false;
+    }
     if get_last_key_pressed().is_some() {
         if is_key_pressed(KeyCode::Q) | is_key_pressed(KeyCode::Escape) {
             #[cfg(not(target_arch = "wasm32"))]

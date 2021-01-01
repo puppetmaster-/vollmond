@@ -1,5 +1,5 @@
 edition = "2018"
-max_width = 120
-fn_args_paren_newline = false
-fn_call_width = 120
-fn_brace_style = "PreferSameLine"
+max_width = 200
+#fn_args_paren_newline = false
+fn_call_width = 200
+#fn_brace_style = "PreferSameLine"

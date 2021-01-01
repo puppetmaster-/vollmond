@@ -20,6 +20,8 @@ const TITLE_ZOOM: f32 = 4.0;
 const SIDE_ZOOM: f32 = 4.0;
 const BACKGROUND_COLOR: Color = color_u8!(27, 25, 25, 255);
 const FONT_COLOR: Color = color_u8!(197, 228, 243, 255);
+const MAP_WATER_COLOR: Color = color_u8!(88, 138, 158, 255);
+const DARKNESS_COLOR: Color = color_u8!(33, 43, 48, 100);
 const DEBUG: bool = false;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]

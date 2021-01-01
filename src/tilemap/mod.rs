@@ -98,7 +98,7 @@ impl Tilemap {
         }
     }
 
-    pub fn set_tileid_at(&mut self, layer: usize, new_id: u32, position: Vec2) {
+    pub fn set_tileid_at(&mut self, layer: usize, new_id: Option<u32>, position: Vec2) {
         let mut pos_x = position.x() as i32;
         let mut pos_y = position.y() as i32;
         if pos_x % 8 != 0 {
@@ -110,21 +110,25 @@ impl Tilemap {
         let x = pos_x as i32 / self.tile_width;
         let y = pos_y as i32 / self.tile_height;
         if let Some(layer) = self.layers.get_mut(layer) {
-            match layer.tiles.get_mut(x as _, y as _) {
-                None => layer.tiles.set(
-                    Tile {
-                        id: new_id,
-                        x: x as i32,
-                        y: y as i32,
-                        position_x: (x as i32 * self.tile_width) as f32,
-                        position_y: (y as i32 * self.tile_height) as f32,
-                        ..Tile::default()
-                    },
-                    x as _,
-                    y as _,
-                ),
-                Some(tile) => tile.id = new_id,
-            };
+            if new_id.is_some() {
+                match layer.tiles.get_mut(x as _, y as _) {
+                    None => layer.tiles.set(
+                        Tile {
+                            id: new_id.unwrap(),
+                            x: x as i32,
+                            y: y as i32,
+                            position_x: (x as i32 * self.tile_width) as f32,
+                            position_y: (y as i32 * self.tile_height) as f32,
+                            ..Tile::default()
+                        },
+                        x as _,
+                        y as _,
+                    ),
+                    Some(tile) => tile.id = new_id.unwrap(),
+                };
+            } else {
+                layer.tiles.delete(x as _, y as _);
+            }
         } else {
             //error!("layer{} not found!", layer);
         }
