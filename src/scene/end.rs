@@ -1,7 +1,7 @@
 use crate::{MainState, FONT_COLOR, TITLE_ZOOM};
 use macroquad::prelude::*;
 use quad_snd::decoder;
-use quad_snd::mixer::{Sound, SoundMixer, Volume};
+use quad_snd::mixer::{SoundMixer, Volume};
 
 const MUSIC_BYTES: &[u8] = include_bytes!("../../assets/music/end.ogg");
 
@@ -27,13 +27,12 @@ impl End {
             camera, 
             font, 
             text1, 
-            start: true 
+            start: true,
         }
     }
 
-    pub fn run(&mut self, secrets: u8) -> Option<MainState> {
+    pub fn run(&mut self, secrets: u8,mixer: &mut SoundMixer) -> Option<MainState> {
         if self.start {
-            let mut mixer = SoundMixer::new();
             let id = mixer.play(decoder::read_ogg(MUSIC_BYTES).unwrap());
             mixer.set_volume(id, Volume(0.6));
             self.start = false;

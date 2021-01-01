@@ -1,7 +1,6 @@
 use crate::entity::player_map::PlayerMap;
 use crate::entity::player_side::{PlayerSide, SPAWN_ID};
 use crate::tilemap::Tilemap;
-use crate::utils::rgba8_color;
 use crate::utils::tween::Tween;
 use crate::{MainState, DARKNESS_COLOR, MAP_WATER_COLOR, MAP_ZOOM, SIDE_ZOOM};
 use keyframe::functions::{EaseIn, EaseOut};
@@ -114,6 +113,7 @@ impl Game {
 
     pub fn run(&mut self) -> Option<MainState> {
         self.item_tween.update();
+        let mut main_state= None;
         match self.game_state {
             GameState::MAP => {
                 if let Some(gs) = self.player_map.update(&self.map_tilemap) {
@@ -143,13 +143,11 @@ impl Game {
                 self.player_map.draw(self.map_texture);
                 set_default_camera();
                 draw_rectangle(0.0, 0.0, screen_width(), screen_height(), DARKNESS_COLOR);
-                process_action()
             }
             GameState::MapHouse => {
                 self.game_state = GameState::HOUSE;
-                None
             }
-            GameState::HOUSE => Some(MainState::END),
+            GameState::HOUSE => {main_state = Some(MainState::END)},
             GameState::MapCemetery => {
                 self.current_tilemap_key = GameState::CEMETERY;
                 self.player_side.position = self
@@ -161,7 +159,6 @@ impl Game {
                 self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = true;
-                None
             }
             GameState::MapIce => {
                 self.current_tilemap_key = GameState::ICE;
@@ -174,7 +171,6 @@ impl Game {
                 self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = true;
-                None
             }
             GameState::MapSwamp => {
                 self.current_tilemap_key = GameState::SWAMP;
@@ -187,7 +183,6 @@ impl Game {
                 self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = true;
-                None
             }
             GameState::MapForest => {
                 self.current_tilemap_key = GameState::FOREST;
@@ -200,7 +195,6 @@ impl Game {
                 self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = true;
-                None
             }
             GameState::MapZelda1 => {
                 self.current_tilemap_key = GameState::ZELDA1;
@@ -213,7 +207,6 @@ impl Game {
                 self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 1000.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = false;
-                None
             }
             GameState::MapZelda2 => {
                 self.current_tilemap_key = GameState::ZELDA2;
@@ -226,7 +219,6 @@ impl Game {
                 self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = false;
-                None
             }
             GameState::MapZelda3 => {
                 self.current_tilemap_key = GameState::ZELDA3;
@@ -239,7 +231,6 @@ impl Game {
                 self.camera_sky.target = self.player_side.position() - vec2(-100.0, OFFSET_CAMERA - 10.0);
                 self.game_state = self.current_tilemap_key.clone();
                 self.draw_sky = true;
-                None
             }
             _ => {
                 if let Some(gs) = self.player_side.update(self.tilemaps.get_mut(&self.current_tilemap_key).unwrap()) {
@@ -291,10 +282,10 @@ impl Game {
                     .unwrap()
                     .draw(self.side_texture, vec2(0.0, 0.0), Some(self.tilemaps.get(&self.current_tilemap_key).unwrap().get_layer_id("front")));
                 set_default_camera();
-
-                None
             }
         }
+        self.mixer.frame();
+        main_state
     }
 }
 
@@ -350,8 +341,4 @@ fn get_tilemaps() -> HashMap<GameState, Tilemap> {
     tilemaps.insert(GameState::ZELDA2, get_side_tilemap(include_bytes!("../../assets/maps/zelda.json").to_vec())); // Zelda
     tilemaps.insert(GameState::ZELDA3, get_side_tilemap(include_bytes!("../../assets/maps/tree.json").to_vec())); // Zelda
     tilemaps
-}
-
-fn process_action() -> Option<MainState> {
-    None
 }

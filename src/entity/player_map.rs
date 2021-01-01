@@ -1,4 +1,3 @@
-use crate::constants::FLOAT_CMP_ERROR_MARGIN;
 use crate::scene::game::GameState;
 use crate::tilemap::tile_animation::TileAnimation;
 use crate::tilemap::Tilemap;
@@ -12,10 +11,6 @@ use std::time::Duration;
 // player
 const MOVING_SPEED: f32 = 0.8;
 const SPAWN_ID: u32 = 507;
-const PLAYER_ID_LEFT: u32 = 571;
-const PLAYER_ID_RIGHT: u32 = 570;
-const PLAYER_ID_UP: u32 = 568;
-const PLAYER_ID_DOWN: u32 = 569;
 
 // side maps
 const HAUS: u32 = 508;

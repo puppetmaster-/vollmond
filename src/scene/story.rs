@@ -4,6 +4,7 @@ use crate::{MainState, FONT_COLOR, TITLE_ZOOM};
 use keyframe::functions::{EaseIn, EaseOut};
 use keyframe::Keyframe;
 use macroquad::prelude::*;
+use quad_snd::mixer::{SoundMixer};
 
 pub struct Story {
     camera: Camera2D,
@@ -51,7 +52,7 @@ impl Story {
         }
     }
 
-    pub fn run(&mut self) -> Option<MainState> {
+    pub fn run(&mut self,_mixer: &mut SoundMixer) -> Option<MainState> {
         self.tween.update();
         if self.need_reset {
             self.need_reset = false;

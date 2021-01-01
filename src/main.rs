@@ -13,6 +13,7 @@ use crate::scene::game::Game;
 use crate::scene::story::Story;
 use crate::scene::title::Title;
 use macroquad::prelude::*;
+use quad_snd::mixer::{SoundMixer};
 
 const MAP_ZOOM: f32 = 6.0;
 const TITLE_ZOOM: f32 = 4.0;
@@ -43,6 +44,7 @@ async fn main() {
     let mut end = End::init().await;
 
     let mut fps_buffer = vec![];
+    let mut mixer = SoundMixer::new();
     loop {
         clear_background(BACKGROUND_COLOR);
         if DEBUG {
@@ -51,7 +53,7 @@ async fn main() {
         match main_state {
             MainState::EXIT => break,
             MainState::TITLE => {
-                if let Some(gs) = title.run() {
+                if let Some(gs) = title.run(&mut mixer) {
                     main_state = gs
                 }
             }
@@ -61,7 +63,7 @@ async fn main() {
                 }
             }
             MainState::STORY => {
-                if let Some(gs) = story.run() {
+                if let Some(gs) = story.run(&mut mixer) {
                     main_state = gs;
                     if game.player_side.ingredients > 0 {
                         game.reset()
@@ -69,12 +71,13 @@ async fn main() {
                 }
             }
             MainState::END => {
-                if let Some(gs) = end.run(game.player_side.bonus) {
+                if let Some(gs) = end.run(game.player_side.bonus,&mut mixer) {
                     main_state = gs
                 }
             }
             _ => {}
         }
+        mixer.frame();
         next_frame().await
     }
 }

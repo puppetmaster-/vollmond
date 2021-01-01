@@ -109,6 +109,8 @@ impl PlayerSide {
         }
     }
     pub fn update(&mut self, tilemap: &mut Tilemap) -> Option<GameState> {
+        let mut gamestate= None; 
+
         // TODO can be called from game?
         if self.need_reset {
             self.state = State::IDLE;
@@ -278,10 +280,10 @@ impl PlayerSide {
             // item pickup logic
             match id_center {
                 Some(id) => match id {
-                    SPAWN_ID => None,
+                    SPAWN_ID => {},
                     EXIT => {
                         self.need_reset = true;
-                        Some(GameState::MAP)
+                        gamestate = Some(GameState::MAP);
                     }
                     ITEM_ZELDA => {
                         if self.last_item_id != Some(id) {
@@ -290,7 +292,6 @@ impl PlayerSide {
                             tilemap.replace_all_tileid(tilemap.get_layer_id("logic"), ITEM_ZELDA, None);
                             self.mixer.play(self.pickup_sound.clone());
                         }
-                        None
                     }
                     _ => {
                         if self.last_item_id != Some(id) {
@@ -299,14 +300,13 @@ impl PlayerSide {
                             tilemap.replace_all_tileid(tilemap.get_layer_id("logic"), id, None);
                             self.mixer.play(self.pickup_sound.clone());
                         }
-                        None
                     }
                 },
-                _ => None,
+                _ => {},
             }
-        } else {
-            None
         }
+        self.mixer.frame();
+        gamestate
     }
 
     pub fn position(&self) -> Vec2 {

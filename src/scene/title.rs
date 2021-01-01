@@ -5,7 +5,7 @@ use keyframe::Keyframe;
 use macroquad::prelude::*;
 use macroquad::texture::Texture2D;
 use quad_snd::decoder;
-use quad_snd::mixer::{Sound, SoundMixer, Volume};
+use quad_snd::mixer::{SoundMixer, Volume};
 
 const MUSIC_BYTES: &[u8] = include_bytes!("../../assets/music/start.ogg");
 
@@ -66,18 +66,18 @@ impl Title {
             camera,
             title,
             animations: tween,
-            start: false
+            start: true,
         }
     }
 
-    pub fn run(&mut self) -> Option<MainState> {
+    pub fn run(&mut self,mixer: &mut SoundMixer) -> Option<MainState> {
         #[cfg(not(target_arch = "wasm32"))]
         if self.start {
-            let mut mixer = SoundMixer::new();
             let id = mixer.play(decoder::read_ogg(MUSIC_BYTES).unwrap());
             mixer.set_volume(id, Volume(0.6));
             self.start = false;
         }
+
         self.animations[0].update();
         self.animations[1].update();
         self.animations[2].update();
@@ -103,7 +103,7 @@ impl Title {
                 color: FONT_COLOR,
             },
         );
-        process_action(self)
+        process_action(self, mixer)
     }
 }
 
@@ -112,13 +112,12 @@ fn update_camera(scene: &mut Title, new_target: Vec2) {
     scene.camera.zoom = vec2(TITLE_ZOOM / screen_width() * 2.0, -TITLE_ZOOM / screen_height() * 2.0);
 }
 
-fn process_action(title: &mut Title) -> Option<MainState> {
+fn process_action(_title: &mut Title,_mixer: &mut SoundMixer) -> Option<MainState> {
     #[cfg(target_arch = "wasm32")]
-    if is_mouse_button_released(MouseButton::Left) && title.start {
-        let mut mixer = SoundMixer::new();
-        let id = mixer.play(decoder::read_ogg(MUSIC_BYTES).unwrap());
-        mixer.set_volume(id, Volume(0.6));
-        title.start = false;
+    if is_mouse_button_pressed(MouseButton::Left) && _title.start {
+        let id = _mixer.play(decoder::read_ogg(MUSIC_BYTES).unwrap());
+        _mixer.set_volume(id, Volume(0.6));
+        _title.start = false;
     }
     if get_last_key_pressed().is_some() {
         if is_key_pressed(KeyCode::Q) | is_key_pressed(KeyCode::Escape) {

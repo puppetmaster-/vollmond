@@ -8,3 +8,6 @@ based on [Macroquad](https://github.com/not-fl3/macroquad) and for the [game off
 
 ## Art
 modified version of [deep-night by V3x3d](https://v3x3d.itch.io/deep-night)
+
+## Music
+modified version of [barons musicpack by Eric the Funny Baron](https://eric-the-funny-baron.itch.io/barons-music-pack)
