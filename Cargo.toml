@@ -6,14 +6,15 @@ edition = "2018"
 #build = "build.rs"
 
 [dependencies]
-quad-snd = { git = "https://github.com/not-fl3/quad-snd" }
+quad-snd = { git = "https://github.com/not-fl3/quad-snd", rev = "68691cf"  }
+macroquad = { git = "https://github.com/not-fl3/macroquad", rev = "a7e39df"  }
 
 [dependencies.miniquad]
 version = "0.3.0-alpha.22"
 
-[dependencies.macroquad]
+#[dependencies.macroquad]
 #path = "../macroquad"
-version = "0.3.0-alpha.12"
+#version = "0.3.0-alpha.12"
 
 [dependencies.nanoserde]
 #path = "../nanoserde"
